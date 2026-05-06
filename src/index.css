@@ -1,0 +1,67 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --violet:        #7c3aed;
+  --violet-light:  #a78bfa;
+  --violet-pale:   rgba(124, 58, 237, 0.15);
+  --indigo:        #4f46e5;
+  --cyan:          #06b6d4;
+  --emerald:       #10b981;
+  --rose:          #f43f5e;
+  --amber:         #f59e0b;
+  --sky:           #0ea5e9;
+
+  --bg-base:       #080a12;
+  --bg-surface:    #0f1120;
+  --bg-card:       #141626;
+  --bg-card-hover: #1a1d30;
+
+  --text-primary:  #eeeeff;
+  --text-secondary:#9896b8;
+  --text-muted:    #5a5878;
+
+  --border:        rgba(124, 58, 237, 0.22);
+  --border-subtle: rgba(255,255,255,0.06);
+
+  --grad-brand:    linear-gradient(135deg, #7c3aed, #4f46e5 50%, #06b6d4);
+  --grad-card:     linear-gradient(145deg, rgba(124,58,237,0.09) 0%, rgba(79,70,229,0.04) 100%);
+
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.35);
+  --shadow-md:  0 8px 32px rgba(0,0,0,0.45);
+  --shadow-glow:0 0 40px rgba(124,58,237,0.28);
+  --shadow-card:0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(124,58,237,0.13);
+
+  --r-sm:   8px;
+  --r-md:   16px;
+  --r-lg:   24px;
+  --r-xl:   32px;
+  --r-full: 9999px;
+
+  --font-body:    'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-heading: 'Space Grotesk', system-ui, sans-serif;
+
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--bg-base);
+  -webkit-font-smoothing: antialiased;
+  scroll-behavior: smooth;
+}
+
+body { min-height: 100vh; background: var(--bg-base); overflow-x: hidden; }
+#root { width: 100%; min-height: 100vh; }
+
+h1,h2,h3,h4 { font-family: var(--font-heading); color: var(--text-primary); line-height: 1.15; }
+p { color: var(--text-secondary); }
+a { color: var(--violet-light); text-decoration: none; }
+img { max-width: 100%; display: block; }
+button { cursor: pointer; font-family: var(--font-body); }
+ul { list-style: none; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb { background: var(--violet); border-radius: 3px; }
+::selection { background: rgba(124,58,237,0.35); color: #fff; }
