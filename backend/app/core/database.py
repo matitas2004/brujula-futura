@@ -10,7 +10,7 @@ settings = get_settings()
 
 # Motor de conexión con pool de conexiones
 engine = create_engine(
-    settings.DATABASE_URL,
+    settings.sync_database_url,
     pool_size=5,
     max_overflow=10,
     pool_pre_ping=True,  # Verificar si la conexión sigue activa

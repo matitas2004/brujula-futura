@@ -18,6 +18,13 @@ class Settings(BaseSettings):
     # Supabase (para uso futuro con integraciones)
     SUPABASE_URL: str = ""
     SUPABASE_ANON_KEY: str = ""
+    
+    @property
+    def sync_database_url(self) -> str:
+        """Asegura que el esquema sea postgresql:// para SQLAlchemy 2.0+"""
+        if self.DATABASE_URL.startswith("postgres://"):
+            return self.DATABASE_URL.replace("postgres://", "postgresql://", 1)
+        return self.DATABASE_URL
 
     class Config:
         env_file = ".env"
