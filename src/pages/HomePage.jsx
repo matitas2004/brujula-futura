@@ -1,6 +1,14 @@
+/**
+ * Brújula Futura — Página de Inicio
+ * Hero con estadísticas dinámicas + sección Bento Grid de funcionalidades.
+ */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import {
+  Sparkles, Search, Brain, GraduationCap, Swords,
+  ArrowRight, ChevronDown, Shield, Clock, Zap
+} from 'lucide-react';
 import AnimatedPage from '../components/AnimatedPage';
 import { getUniversidades, getCarreras } from '../services/api';
 
@@ -25,7 +33,7 @@ export default function HomePage() {
 
   return (
     <AnimatedPage>
-      {/* Hero */}
+      {/* ── Hero ────────────────────────────────────── */}
       <section className="hero" id="inicio">
         <div className="hero-bg" />
         <div className="hero-orb hero-orb-1" />
@@ -60,7 +68,7 @@ export default function HomePage() {
               whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(124,58,237,0.5)' }}
               whileTap={{ scale: 0.95 }}
             >
-              ✨ Hacer el test
+              <Sparkles size={18} /> Hacer el test
             </motion.button>
             <motion.button
               className="btn-secondary"
@@ -69,7 +77,7 @@ export default function HomePage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Ver carreras
+              <Search size={16} /> Ver carreras
             </motion.button>
           </motion.div>
 
@@ -112,47 +120,115 @@ export default function HomePage() {
 
         <motion.div
           className="hero-scroll"
-          onClick={() => navigate('/test')}
+          onClick={() => document.getElementById('bento-features')?.scrollIntoView({ behavior: 'smooth' })}
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
         >
           <span>Descubre más</span>
-          <div className="scroll-arrow" />
+          <ChevronDown size={20} />
         </motion.div>
       </section>
 
-      {/* Quick features section */}
-      <section style={{ padding: '80px 24px', maxWidth: '1200px', margin: '0 auto' }}>
-        <motion.h2
-          style={{ textAlign: 'center', fontSize: '2rem', marginBottom: '48px' }}
-          {...fadeUp(0)}
+      {/* ── Bento Grid Features ────────────────────── */}
+      <section className="bento-section" id="bento-features">
+        <motion.div
+          className="bento-header"
+          initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
         >
-          ¿Cómo funciona <span className="accent">Brújula Futura</span>?
-        </motion.h2>
+          <h2>Tu camino en <span className="accent">tres pasos</span></h2>
+          <p>Una experiencia diseñada para ayudarte a tomar decisiones informadas sobre tu futuro profesional.</p>
+        </motion.div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
-          {[
-            { icon: '🧠', title: 'Test RIASEC', desc: 'Responde 18 preguntas basadas en psicología vocacional para descubrir tu perfil.' },
-            { icon: '🎓', title: 'Explora Carreras', desc: 'Navega entre 15+ carreras con datos reales de universidades ecuatorianas.' },
-            { icon: '⚔️', title: 'Versus', desc: 'Compara hasta 3 carreras lado a lado: costos, duración y oportunidades.' },
-          ].map((item, i) => (
-            <motion.div
-              key={i}
-              className="bf-card"
-              style={{ padding: '32px', textAlign: 'center' }}
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.15, duration: 0.5 }}
-              whileHover={{ y: -8, boxShadow: '0 16px 48px rgba(124,58,237,0.25)' }}
-            >
-              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>{item.icon}</div>
-              <h3 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>{item.title}</h3>
-              <p style={{ fontSize: '0.95rem' }}>{item.desc}</p>
-            </motion.div>
-          ))}
+        <div className="bento-grid">
+          {/* Card Principal — Test RIASEC (ocupa 2 columnas en desktop) */}
+          <motion.div
+            className="bento-card bento-card-featured"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            whileHover={{ y: -6 }}
+            onClick={() => navigate('/test')}
+          >
+            <div className="bento-card-glow bento-glow-violet" />
+            <div className="bento-card-content">
+              <div className="bento-icon-box bento-icon-violet">
+                <Brain size={28} />
+              </div>
+              <div className="bento-step-badge">Paso 1</div>
+              <h3>Test Vocacional RIASEC</h3>
+              <p>
+                Responde 18 preguntas basadas en el modelo de Holland, utilizado por psicólogos
+                vocacionales a nivel mundial. Descubre tu perfil de personalidad y las áreas
+                profesionales que mejor se alinean contigo.
+              </p>
+              <div className="bento-card-tags">
+                <span><Clock size={12} /> 5 minutos</span>
+                <span><Shield size={12} /> Científicamente validado</span>
+                <span><Zap size={12} /> Resultados instantáneos</span>
+              </div>
+              <div className="bento-card-cta">
+                Comenzar test <ArrowRight size={16} />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Card — Explorar Carreras */}
+          <motion.div
+            className="bento-card"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.15 }}
+            whileHover={{ y: -6 }}
+            onClick={() => navigate('/explorar')}
+          >
+            <div className="bento-card-glow bento-glow-cyan" />
+            <div className="bento-card-content">
+              <div className="bento-icon-box bento-icon-cyan">
+                <GraduationCap size={24} />
+              </div>
+              <div className="bento-step-badge">Paso 2</div>
+              <h3>Explorar Carreras</h3>
+              <p>
+                Navega entre {stats.carreras || '15'}+ carreras con datos reales de
+                universidades ecuatorianas: costos, duración, modalidades y salida laboral.
+              </p>
+              <div className="bento-card-cta">
+                Ver carreras <ArrowRight size={16} />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Card — Versus */}
+          <motion.div
+            className="bento-card"
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            whileHover={{ y: -6 }}
+            onClick={() => navigate('/explorar')}
+          >
+            <div className="bento-card-glow bento-glow-emerald" />
+            <div className="bento-card-content">
+              <div className="bento-icon-box bento-icon-emerald">
+                <Swords size={24} />
+              </div>
+              <div className="bento-step-badge">Paso 3</div>
+              <h3>Comparar Opciones</h3>
+              <p>
+                Selecciona hasta 3 carreras y compáralas lado a lado: costos promedio,
+                duración, universidades disponibles y campo laboral.
+              </p>
+              <div className="bento-card-cta">
+                Comparar <ArrowRight size={16} />
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
     </AnimatedPage>
