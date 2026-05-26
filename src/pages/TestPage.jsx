@@ -1,6 +1,18 @@
+/**
+ * Brújula Futura — Página del Test Vocacional
+ * Quiz interactivo + resultados con Radar Chart (Recharts) y tarjetas Bento.
+ */
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import {
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip
+} from 'recharts';
+import {
+  Target, Search, RotateCcw, Loader2, ArrowRight, ArrowLeft,
+  ChevronLeft, ChevronRight, Clock, Briefcase, GraduationCap
+} from 'lucide-react';
+import { toast } from 'sonner';
 import AnimatedPage from '../components/AnimatedPage';
 import { SkeletonList } from '../components/SkeletonLoader';
 import { getPreguntas, procesarTest } from '../services/api';
@@ -22,12 +34,11 @@ export default function TestPage() {
   useEffect(() => {
     getPreguntas()
       .then(data => { setPreguntas(data); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch(() => { setLoading(false); toast.error('No se pudieron cargar las preguntas. Intenta recargar la página.'); });
   }, []);
 
   const handleAnswer = (idPregunta, idOpcion) => {
     setAnswers(prev => ({ ...prev, [idPregunta]: idOpcion }));
-    // Auto-advance after short delay
     setTimeout(() => {
       if (currentStep < preguntas.length - 1) setCurrentStep(prev => prev + 1);
     }, 400);
@@ -42,8 +53,9 @@ export default function TestPage() {
       }));
       const res = await procesarTest(respuestas);
       setResultado(res);
+      toast.success('¡Resultados listos! Descubre tu perfil vocacional.');
     } catch (e) {
-      alert('Error al procesar: ' + e.message);
+      toast.error('Error al procesar el test: ' + e.message);
     }
     setProcessing(false);
   };
@@ -52,94 +64,159 @@ export default function TestPage() {
   const allAnswered = preguntas.length > 0 && Object.keys(answers).length === preguntas.length;
   const pregunta = preguntas[currentStep];
 
+  /* ── Vista de Resultados ───────────────────────── */
   if (resultado) {
+    const radarData = resultado.perfil_riasec.map(area => ({
+      area: area.nombre_area,
+      valor: area.porcentaje,
+      fullMark: 100,
+    }));
+
     return (
       <AnimatedPage>
         <section className="test-results-page">
-          <div className="section-inner" style={{ maxWidth: '900px', margin: '0 auto', padding: '100px 24px 60px' }}>
-            <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', duration: 0.6 }}>
-              <h1 style={{ textAlign: 'center', marginBottom: '8px' }}>
-                Tu perfil: <span className="accent">{resultado.nombre_dominante}</span>
-              </h1>
-              <p style={{ textAlign: 'center', marginBottom: '40px', fontSize: '1.1rem' }}>
-                Tu área dominante RIASEC es <strong>{resultado.nombre_dominante}</strong> ({resultado.codigo_dominante})
-              </p>
+          <div className="results-container">
+            {/* Encabezado */}
+            <motion.div
+              className="results-header"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', duration: 0.6 }}
+            >
+              <div className="results-icon-box">
+                <Target size={32} />
+              </div>
+              <h1>Tu perfil: <span className="accent">{resultado.nombre_dominante}</span></h1>
+              <p>Tu área dominante RIASEC es <strong>{resultado.nombre_dominante}</strong> ({resultado.codigo_dominante})</p>
             </motion.div>
 
-            {/* RIASEC Bars */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '48px' }}>
-              {resultado.perfil_riasec.map((area, i) => (
-                <motion.div
-                  key={area.codigo_area}
-                  initial={{ opacity: 0, x: -40 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  style={{ display: 'flex', alignItems: 'center', gap: '16px' }}
-                >
-                  <span style={{ width: '140px', fontWeight: 600, fontSize: '0.95rem' }}>
-                    {area.nombre_area}
-                  </span>
-                  <div style={{ flex: 1, height: '28px', background: 'var(--bg-card)', borderRadius: 'var(--r-full)', overflow: 'hidden' }}>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${area.porcentaje}%` }}
-                      transition={{ delay: 0.3 + i * 0.1, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                      style={{
-                        height: '100%',
-                        borderRadius: 'var(--r-full)',
-                        background: `linear-gradient(90deg, ${AREA_COLORS[area.codigo_area]}, ${AREA_COLORS[area.codigo_area]}aa)`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '12px',
-                        fontSize: '0.8rem', fontWeight: 700, color: '#fff',
-                        minWidth: area.porcentaje > 5 ? 'fit-content' : '0',
+            {/* Bento Grid de resultados: Radar + Barras */}
+            <div className="results-bento">
+              {/* Radar Chart */}
+              <motion.div
+                className="results-radar-card"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+              >
+                <h3>Perfil Vocacional</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="75%">
+                    <PolarGrid stroke="rgba(124, 58, 237, 0.15)" />
+                    <PolarAngleAxis
+                      dataKey="area"
+                      tick={{ fill: '#9896b8', fontSize: 12, fontWeight: 600 }}
+                    />
+                    <PolarRadiusAxis
+                      angle={30}
+                      domain={[0, 100]}
+                      tick={false}
+                      axisLine={false}
+                    />
+                    <Radar
+                      name="Perfil"
+                      dataKey="valor"
+                      stroke="#7c3aed"
+                      fill="url(#radarGradient)"
+                      fillOpacity={0.4}
+                      strokeWidth={2}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: 'rgba(20, 22, 38, 0.95)',
+                        border: '1px solid rgba(124, 58, 237, 0.3)',
+                        borderRadius: '12px',
+                        color: '#eeeeff',
+                        fontSize: '13px',
                       }}
+                      formatter={(value) => [`${value}%`, 'Afinidad']}
+                    />
+                    <defs>
+                      <linearGradient id="radarGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.6} />
+                        <stop offset="100%" stopColor="#06b6d4" stopOpacity={0.2} />
+                      </linearGradient>
+                    </defs>
+                  </RadarChart>
+                </ResponsiveContainer>
+              </motion.div>
+
+              {/* Barras detalladas */}
+              <motion.div
+                className="results-bars-card"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35, duration: 0.6 }}
+              >
+                <h3>Detalle por Área</h3>
+                <div className="results-bars">
+                  {resultado.perfil_riasec.map((area, i) => (
+                    <motion.div
+                      key={area.codigo_area}
+                      className="result-bar-row"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 + i * 0.08 }}
                     >
-                      {area.porcentaje > 10 && `${area.porcentaje}%`}
+                      <span className="bar-label">{area.nombre_area}</span>
+                      <div className="bar-track">
+                        <motion.div
+                          className="bar-fill"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${area.porcentaje}%` }}
+                          transition={{ delay: 0.5 + i * 0.08, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                          style={{ background: `linear-gradient(90deg, ${AREA_COLORS[area.codigo_area]}, ${AREA_COLORS[area.codigo_area]}88)` }}
+                        />
+                      </div>
+                      <span className="bar-value">{area.porcentaje}%</span>
                     </motion.div>
-                  </div>
-                  <span style={{ width: '50px', textAlign: 'right', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                    {area.porcentaje}%
-                  </span>
-                </motion.div>
-              ))}
+                  ))}
+                </div>
+              </motion.div>
             </div>
 
-            {/* Career Recommendations */}
-            <motion.h2
-              style={{ fontSize: '1.5rem', marginBottom: '24px' }}
+            {/* Carreras Recomendadas */}
+            <motion.div
+              className="results-careers-section"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
             >
-              🎯 Carreras recomendadas para ti
-            </motion.h2>
+              <h2>
+                <Target size={22} style={{ verticalAlign: 'middle', marginRight: 8 }} />
+                Carreras recomendadas para ti
+              </h2>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', marginBottom: '40px' }}>
-              {resultado.carreras_recomendadas.map((c, i) => (
-                <motion.div
-                  key={c.id_carrera}
-                  className="bf-card"
-                  style={{ padding: '24px' }}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1 + i * 0.1 }}
-                  whileHover={{ y: -6, boxShadow: '0 12px 40px rgba(124,58,237,0.2)' }}
-                >
-                  <span className="bf-badge" style={{ marginBottom: '12px', display: 'inline-block' }}>{c.area_nombre}</span>
-                  <h3 style={{ fontSize: '1.15rem', marginBottom: '8px' }}>{c.nombre_carrera}</h3>
-                  <p style={{ fontSize: '0.85rem', marginBottom: '8px' }}>⏱ {c.duracion_meses} meses</p>
-                  <p style={{ fontSize: '0.85rem' }}>{c.salida_laboral}</p>
-                </motion.div>
-              ))}
-            </div>
+              <div className="results-careers-grid">
+                {resultado.carreras_recomendadas.map((c, i) => (
+                  <motion.div
+                    key={c.id_carrera}
+                    className="result-career-card"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 1 + i * 0.08 }}
+                    whileHover={{ y: -4, boxShadow: '0 12px 40px rgba(124,58,237,0.2)' }}
+                  >
+                    <span className="career-area-tag">{c.area_nombre}</span>
+                    <h3>{c.nombre_carrera}</h3>
+                    <div className="career-meta">
+                      <span><Clock size={13} /> {c.duracion_meses} meses</span>
+                      {c.salida_laboral && <span><Briefcase size={13} /> {c.salida_laboral}</span>}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
 
-            <div style={{ textAlign: 'center', display: 'flex', gap: '16px', justifyContent: 'center' }}>
+            {/* Acciones */}
+            <div className="results-actions">
               <motion.button
                 className="btn-primary"
                 onClick={() => navigate('/explorar')}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                🔍 Explorar carreras
+                <Search size={18} /> Explorar carreras
               </motion.button>
               <motion.button
                 className="btn-secondary"
@@ -147,7 +224,7 @@ export default function TestPage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                🔄 Repetir test
+                <RotateCcw size={16} /> Repetir test
               </motion.button>
             </div>
           </div>
@@ -156,6 +233,7 @@ export default function TestPage() {
     );
   }
 
+  /* ── Vista del Quiz ────────────────────────────── */
   return (
     <AnimatedPage>
       <section className="test-page">
@@ -229,7 +307,7 @@ export default function TestPage() {
                     style={{ opacity: currentStep === 0 ? 0.4 : 1 }}
                     whileHover={currentStep > 0 ? { scale: 1.05 } : {}}
                   >
-                    ← Anterior
+                    <ChevronLeft size={16} /> Anterior
                   </motion.button>
 
                   {allAnswered ? (
@@ -242,7 +320,11 @@ export default function TestPage() {
                       animate={{ boxShadow: ['0 0 10px rgba(124,58,237,0.3)', '0 0 25px rgba(124,58,237,0.5)', '0 0 10px rgba(124,58,237,0.3)'] }}
                       transition={{ repeat: Infinity, duration: 2 }}
                     >
-                      {processing ? '⏳ Procesando...' : '🚀 Ver resultados'}
+                      {processing ? (
+                        <><Loader2 size={18} className="spin-icon" /> Procesando...</>
+                      ) : (
+                        <><ArrowRight size={18} /> Ver resultados</>
+                      )}
                     </motion.button>
                   ) : (
                     <motion.button
@@ -252,7 +334,7 @@ export default function TestPage() {
                       style={{ opacity: currentStep >= preguntas.length - 1 ? 0.4 : 1 }}
                       whileHover={currentStep < preguntas.length - 1 ? { scale: 1.05 } : {}}
                     >
-                      Siguiente →
+                      Siguiente <ChevronRight size={16} />
                     </motion.button>
                   )}
                 </div>
