@@ -1,13 +1,57 @@
 /**
  * Brújula Futura — Página de Registro
- * Diseño premium con validación en el cliente.
+ * Validación onBlur profesional, medidor de fuerza de contraseña, iconos Lucide.
  */
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Sparkles, Mail, Lock, UserRound, AlertCircle, ArrowRight, Loader2, Check, X as XIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import AnimatedPage from '../components/AnimatedPage';
 import { useAuth } from '../context/AuthContext';
 import { registrarse } from '../services/api';
+
+/* ── Utilidades de validación ────────────────────────────── */
+const PASSWORD_RULES = [
+  { id: 'length', label: 'Al menos 8 caracteres', test: (v) => v.length >= 8 },
+  { id: 'number', label: 'Contiene un número', test: (v) => /\d/.test(v) },
+  { id: 'upper', label: 'Contiene una mayúscula', test: (v) => /[A-Z]/.test(v) },
+];
+
+const getPasswordStrength = (value) => {
+  if (!value) return { level: 0, label: '', color: '' };
+  const passed = PASSWORD_RULES.filter(r => r.test(value)).length;
+  if (passed <= 1) return { level: 1, label: 'Débil', color: 'var(--rose)' };
+  if (passed === 2) return { level: 2, label: 'Media', color: 'var(--amber)' };
+  return { level: 3, label: 'Fuerte', color: 'var(--emerald)' };
+};
+
+const validateField = (name, value, form) => {
+  switch (name) {
+    case 'nombres':
+      if (!value.trim()) return 'Este campo es obligatorio.';
+      if (value.trim().length < 2) return 'El nombre debe tener al menos 2 caracteres.';
+      return '';
+    case 'apellidos':
+      if (!value.trim()) return 'Este campo es obligatorio.';
+      if (value.trim().length < 2) return 'Los apellidos deben tener al menos 2 caracteres.';
+      return '';
+    case 'correo':
+      if (!value) return 'Este campo es obligatorio.';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return 'Por favor, introduce un correo electrónico válido.';
+      return '';
+    case 'clave':
+      if (!value) return 'Este campo es obligatorio.';
+      if (value.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
+      return '';
+    case 'confirmarClave':
+      if (!value) return 'Este campo es obligatorio.';
+      if (value !== form.clave) return 'Las contraseñas no coinciden.';
+      return '';
+    default:
+      return '';
+  }
+};
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -20,33 +64,48 @@ export default function RegisterPage() {
     clave: '',
     confirmarClave: '',
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
   const [loading, setLoading] = useState(false);
 
+  const strength = getPasswordStrength(form.clave);
+
   const handleChange = (e) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-    setError('');
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (touched[name]) {
+      setErrors(prev => ({ ...prev, [name]: validateField(name, value, { ...form, [name]: value }) }));
+    }
+    // Si cambia la contraseña, revalidar confirmación
+    if (name === 'clave' && touched.confirmarClave) {
+      setErrors(prev => ({ ...prev, confirmarClave: validateField('confirmarClave', form.confirmarClave, { ...form, clave: value }) }));
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    setErrors(prev => ({ ...prev, [name]: validateField(name, value, form) }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const fields = ['nombres', 'apellidos', 'correo', 'clave', 'confirmarClave'];
+    const newErrors = {};
+    const newTouched = {};
+    fields.forEach(key => {
+      newErrors[key] = validateField(key, form[key], form);
+      newTouched[key] = true;
+    });
+    setErrors(newErrors);
+    setTouched(newTouched);
 
-    // Validaciones
-    if (!form.nombres || !form.apellidos || !form.correo || !form.clave) {
-      setError('Por favor completa todos los campos obligatorios.');
-      return;
-    }
-    if (form.clave.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
-      return;
-    }
-    if (form.clave !== form.confirmarClave) {
-      setError('Las contraseñas no coinciden.');
+    if (Object.values(newErrors).some(e => e)) {
+      toast.error('Por favor, corrige los errores antes de continuar.');
       return;
     }
 
     setLoading(true);
-    setError('');
     try {
       const res = await registrarse({
         nombres: form.nombres,
@@ -55,12 +114,37 @@ export default function RegisterPage() {
         clave: form.clave,
       });
       login(res.access_token, res.usuario);
+      toast.success('¡Cuenta creada con éxito! Redirigiendo al test...');
       navigate('/test', { replace: true });
     } catch (err) {
-      setError(err.message || 'Error al registrarse.');
+      toast.error(err.message || 'Ocurrió un error al registrarse. Inténtalo de nuevo.');
     }
     setLoading(false);
   };
+
+  const renderField = (name, label, type, placeholder, icon, autoComplete) => (
+    <div className={`auth-field ${touched[name] && errors[name] ? 'field-error' : touched[name] && !errors[name] ? 'field-valid' : ''}`}>
+      <label htmlFor={`reg-${name}`}>
+        {icon} {label}
+      </label>
+      <input
+        id={`reg-${name}`}
+        type={type}
+        name={name}
+        placeholder={placeholder}
+        value={form[name]}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        autoComplete={autoComplete}
+        aria-invalid={touched[name] && !!errors[name]}
+      />
+      {touched[name] && errors[name] && (
+        <motion.span className="field-error-msg" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}>
+          <AlertCircle size={13} /> {errors[name]}
+        </motion.span>
+      )}
+    </div>
+  );
 
   return (
     <AnimatedPage>
@@ -77,94 +161,60 @@ export default function RegisterPage() {
           >
             {/* Header */}
             <div className="auth-header">
-              <motion.span
-                className="auth-icon"
+              <motion.div
+                className="auth-icon-wrapper"
                 initial={{ rotate: 20, scale: 0 }}
                 animate={{ rotate: 0, scale: 1 }}
                 transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               >
-                ✨
-              </motion.span>
+                <Sparkles size={32} className="auth-lucide-icon" />
+              </motion.div>
               <h1>Crea tu cuenta</h1>
               <p>Regístrate para descubrir tu vocación ideal</p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="auth-form" id="register-form">
+            <form onSubmit={handleSubmit} className="auth-form" id="register-form" noValidate>
               <div className="auth-row">
-                <div className="auth-field">
-                  <label htmlFor="reg-nombres">Nombres</label>
-                  <input
-                    id="reg-nombres"
-                    type="text"
-                    name="nombres"
-                    placeholder="Juan Carlos"
-                    value={form.nombres}
-                    onChange={handleChange}
-                    autoComplete="given-name"
-                  />
-                </div>
-                <div className="auth-field">
-                  <label htmlFor="reg-apellidos">Apellidos</label>
-                  <input
-                    id="reg-apellidos"
-                    type="text"
-                    name="apellidos"
-                    placeholder="Pérez López"
-                    value={form.apellidos}
-                    onChange={handleChange}
-                    autoComplete="family-name"
-                  />
-                </div>
+                {renderField('nombres', 'Nombres', 'text', 'Juan Carlos', <UserRound size={14} className="field-icon" />, 'given-name')}
+                {renderField('apellidos', 'Apellidos', 'text', 'Pérez López', <UserRound size={14} className="field-icon" />, 'family-name')}
               </div>
 
-              <div className="auth-field">
-                <label htmlFor="reg-correo">Correo electrónico</label>
-                <input
-                  id="reg-correo"
-                  type="email"
-                  name="correo"
-                  placeholder="tu@correo.com"
-                  value={form.correo}
-                  onChange={handleChange}
-                  autoComplete="email"
-                />
-              </div>
+              {renderField('correo', 'Correo electrónico', 'email', 'tu@correo.com', <Mail size={14} className="field-icon" />, 'email')}
 
               <div className="auth-row">
-                <div className="auth-field">
-                  <label htmlFor="reg-clave">Contraseña</label>
-                  <input
-                    id="reg-clave"
-                    type="password"
-                    name="clave"
-                    placeholder="Mínimo 6 caracteres"
-                    value={form.clave}
-                    onChange={handleChange}
-                    autoComplete="new-password"
-                  />
-                </div>
-                <div className="auth-field">
-                  <label htmlFor="reg-confirmar">Confirmar</label>
-                  <input
-                    id="reg-confirmar"
-                    type="password"
-                    name="confirmarClave"
-                    placeholder="Repetir contraseña"
-                    value={form.confirmarClave}
-                    onChange={handleChange}
-                    autoComplete="new-password"
-                  />
-                </div>
+                {renderField('clave', 'Contraseña', 'password', 'Mínimo 8 caracteres', <Lock size={14} className="field-icon" />, 'new-password')}
+                {renderField('confirmarClave', 'Confirmar', 'password', 'Repetir contraseña', <Lock size={14} className="field-icon" />, 'new-password')}
               </div>
 
-              {error && (
+              {/* Password strength meter */}
+              {form.clave && (
                 <motion.div
-                  className="auth-error"
-                  initial={{ opacity: 0, y: -8 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  className="password-strength"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  transition={{ duration: 0.3 }}
                 >
-                  ⚠️ {error}
+                  <div className="strength-bar-track">
+                    <motion.div
+                      className="strength-bar-fill"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(strength.level / 3) * 100}%` }}
+                      style={{ backgroundColor: strength.color }}
+                      transition={{ duration: 0.4, ease: 'easeOut' }}
+                    />
+                  </div>
+                  <span className="strength-label" style={{ color: strength.color }}>
+                    {strength.label}
+                  </span>
+                  <div className="strength-rules">
+                    {PASSWORD_RULES.map(rule => (
+                      <span key={rule.id} className={`rule ${rule.test(form.clave) ? 'rule-pass' : 'rule-fail'}`}>
+                        {rule.test(form.clave) ? <Check size={12} /> : <XIcon size={12} />}
+                        {rule.label}
+                      </span>
+                    ))}
+                  </div>
                 </motion.div>
               )}
 
@@ -177,9 +227,9 @@ export default function RegisterPage() {
                 whileTap={{ scale: 0.98 }}
               >
                 {loading ? (
-                  <span className="auth-spinner">⏳ Registrando...</span>
+                  <span className="auth-spinner"><Loader2 size={18} className="spin-icon" /> Registrando...</span>
                 ) : (
-                  '🎯 Crear Cuenta'
+                  <><ArrowRight size={18} /> Crear Cuenta</>
                 )}
               </motion.button>
             </form>

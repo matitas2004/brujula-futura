@@ -364,3 +364,201 @@
     display: none;
   }
 }
+
+/* ─── Field Validation States ────────────── */
+.auth-field.field-error input {
+  border-color: var(--rose);
+  background: rgba(244, 63, 94, 0.06);
+}
+.auth-field.field-valid input {
+  border-color: var(--emerald);
+}
+.field-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: #fb7185;
+  margin-top: 6px;
+  font-weight: 500;
+}
+.field-icon {
+  vertical-align: middle;
+  opacity: 0.7;
+}
+
+/* ─── Auth Icon Wrapper (Lucide) ─────────── */
+.auth-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--violet-pale);
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.auth-lucide-icon {
+  color: var(--violet-light);
+}
+
+/* ─── Password Strength Meter ────────────── */
+.password-strength {
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+.strength-bar-track {
+  height: 4px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+.strength-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease, background-color 0.4s ease;
+}
+.strength-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.strength-rules {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+.rule {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: color 0.25s;
+}
+.rule-pass {
+  color: var(--emerald);
+}
+.rule-fail {
+  color: var(--text-muted);
+}
+
+/* ─── Spinning Loader Icon ───────────────── */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+/* ─── Lucide Icon in Navbar Brand ────────── */
+.nav-compass-icon {
+  color: var(--violet-light);
+  flex-shrink: 0;
+}
+.footer-logo-icon {
+  color: var(--violet-light);
+  flex-shrink: 0;
+}
+
+/* ─── Hamburger Menu Button ──────────────── */
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  padding: 6px;
+  cursor: pointer;
+  z-index: 1001;
+}
+@media (max-width: 768px) {
+  .nav-hamburger {
+    display: flex;
+    align-items: center;
+  }
+  .nav-auth {
+    display: none;
+  }
+}
+
+/* ─── Mobile Menu Overlay ────────────────── */
+.nav-mobile-menu {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  background: rgba(15, 17, 32, 0.97);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border);
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+}
+.nav-mobile-link {
+  display: block;
+  padding: 12px 16px;
+  color: var(--text-secondary);
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: var(--r-md);
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.nav-mobile-link:hover,
+.nav-mobile-link.active {
+  color: var(--text-primary);
+  background: var(--violet-pale);
+}
+.nav-mobile-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 8px 0;
+}
+.nav-mobile-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+.nav-mobile-logout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  border-radius: var(--r-md);
+  color: #fb7185;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.2s;
+}
+.nav-mobile-logout:hover {
+  background: rgba(244, 63, 94, 0.2);
+}
+.nav-mobile-cta {
+  padding: 14px 16px;
+  background: var(--grad-brand);
+  border: none;
+  border-radius: var(--r-md);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: center;
+}
