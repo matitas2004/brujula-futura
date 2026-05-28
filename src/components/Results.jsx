@@ -1,6 +1,7 @@
 import { INTERESTS } from '../data/db'
 
 export default function Results({ results, selectedInterests }) {
+  // Evita el renderizado del componente cuando la lista de resultados está vacía o indefinida
   if (!results || results.length === 0) return null
 
   return (
