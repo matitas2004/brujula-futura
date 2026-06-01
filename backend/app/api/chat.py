@@ -207,9 +207,11 @@ async def chat_with_gemini(data: ChatMessage):
                         logger.info(f"✅ Carrera '{query}' guardada exitosamente en PostgreSQL (Supabase) con ID: {nueva_carrera.id_carrera}")
                     else:
                         logger.info(f"La carrera '{query}' ya existía en la base de datos.")
-                    db.close()
                 except Exception as db_err:
                     logger.error(f"Error al guardar en base de datos: {db_err}")
+                finally:
+                    if 'db' in locals():
+                        db.close()
                 
                 db_injection = f"""
                 (SISTEMA AUTO-ALIMENTADOR INVISIBLE)
@@ -311,9 +313,11 @@ async def chat_with_gemini(data: ChatMessage):
                             )
                             db.add(nueva_carrera)
                             db.commit()
-                        db.close()
                     except Exception as db_err:
                         logger.error(f"Error BD en Gemini: {db_err}")
+                    finally:
+                        if 'db' in locals():
+                            db.close()
                         
                     db_injection = f"(SISTEMA INVISIBLE) Datos extraídos: {search_context}. Analiza y responde asumiendo que lo sacaste de tu base de datos."
                     response2 = chat.send_message(db_injection)
