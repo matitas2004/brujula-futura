@@ -30,6 +30,7 @@ export default function TestPage() {
   const [answers, setAnswers] = useState({});
   const [resultado, setResultado] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [isWakingUp, setIsWakingUp] = useState(false);
 
   useEffect(() => {
     getPreguntas()
@@ -47,20 +48,28 @@ export default function TestPage() {
 
   const handleSubmit = async () => {
     setProcessing(true);
+    setIsWakingUp(false);
+    
+    // Si la petición tarda más de 3 segundos, asumimos que el servidor de Render está "despertando"
+    const timeoutId = setTimeout(() => setIsWakingUp(true), 3000);
+
     try {
       const respuestas = Object.entries(answers).map(([id_pregunta, id_opcion]) => ({
         id_pregunta: parseInt(id_pregunta),
         id_opcion: parseInt(id_opcion),
       }));
       const res = await procesarTest(respuestas);
+      clearTimeout(timeoutId);
       setResultado(res);
       // Guardar en localStorage para alimentar el contexto (memoria) del Chat
       localStorage.setItem('bf_test_result', JSON.stringify(res));
       toast.success('¡Resultados listos! Descubre tu perfil vocacional.');
     } catch (e) {
+      clearTimeout(timeoutId);
       toast.error('Error al procesar el test: ' + e.message);
     }
     setProcessing(false);
+    setIsWakingUp(false);
   };
 
   const progress = preguntas.length > 0 ? (Object.keys(answers).length / preguntas.length) * 100 : 0;
@@ -314,21 +323,32 @@ export default function TestPage() {
                   </motion.button>
 
                   {allAnswered ? (
-                    <motion.button
-                      className="btn-primary"
-                      onClick={handleSubmit}
-                      disabled={processing}
-                      whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(124,58,237,0.5)' }}
-                      whileTap={{ scale: 0.95 }}
-                      animate={{ boxShadow: ['0 0 10px rgba(124,58,237,0.3)', '0 0 25px rgba(124,58,237,0.5)', '0 0 10px rgba(124,58,237,0.3)'] }}
-                      transition={{ repeat: Infinity, duration: 2 }}
-                    >
-                      {processing ? (
-                        <><Loader2 size={18} className="spin-icon" /> Procesando...</>
-                      ) : (
-                        <><ArrowRight size={18} /> Ver resultados</>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                      <motion.button
+                        className="btn-primary"
+                        onClick={handleSubmit}
+                        disabled={processing}
+                        whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(124,58,237,0.5)' }}
+                        whileTap={{ scale: 0.95 }}
+                        animate={{ boxShadow: ['0 0 10px rgba(124,58,237,0.3)', '0 0 25px rgba(124,58,237,0.5)', '0 0 10px rgba(124,58,237,0.3)'] }}
+                        transition={{ repeat: Infinity, duration: 2 }}
+                      >
+                        {processing ? (
+                          <><Loader2 size={18} className="spin-icon" /> Procesando...</>
+                        ) : (
+                          <><ArrowRight size={18} /> Ver resultados</>
+                        )}
+                      </motion.button>
+                      {isWakingUp && (
+                        <motion.p
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          style={{ fontSize: '0.85rem', color: '#f59e0b', maxWidth: '200px', textAlign: 'right', margin: 0, fontWeight: '500' }}
+                        >
+                          ⚠️ Despertando servidor... puede tardar hasta 50 seg. No recargues la página.
+                        </motion.p>
                       )}
-                    </motion.button>
+                    </div>
                   ) : (
                     <motion.button
                       className="btn-secondary"

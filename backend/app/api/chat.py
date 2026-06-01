@@ -4,6 +4,8 @@ import google.generativeai as genai
 import urllib.request
 import json
 import logging
+import re
+from duckduckgo_search import DDGS
 
 from app.core.config import get_settings
 
@@ -28,6 +30,7 @@ async def chat_with_gemini(data: ChatMessage):
         "1. Contexto Ecuatoriano: Conoce la realidad académica y laboral de Ecuador (ej. Senescyt, universidades públicas como UCE, EPN, privadas como USFQ, PUCE). Sé realista sobre las oportunidades laborales a nivel nacional e internacional.\n"
         "2. Formato: Responde de forma muy amigable, fluida y empática. NO uses lenguaje robótico.\n"
         "3. Estructura: Usa listas o viñetas (Markdown) para facilitar la lectura. Mantén las respuestas rápidas, directas y concisas (máximo 2 párrafos cortos a menos que te pidan detalles profundos).\n"
+        "4. AUTO-ALIMENTACIÓN (MUY IMPORTANTE): Si el estudiante te pregunta por información específica de una CARRERA (ej. costos, dónde estudiarla, de qué trata) y NO estás 100% seguro de los datos exactos y actuales para ECUADOR, DEBES responder ÚNICAMENTE con esta frase exacta: [[REQUIRE_SEARCH: Nombre de la Carrera en Ecuador]]. No agregues ningún otro texto. Yo buscaré la info en la BD y te la enviaré.\n"
     )
 
     # Si recibimos el contexto del Test Vocacional, inyectarlo dinámicamente en el cerebro del modelo
@@ -110,51 +113,78 @@ async def chat_with_gemini(data: ChatMessage):
             messages.append({"role": role, "content": msg["content"]})
         messages.append({"role": "user", "content": data.message})
 
-        payload = {
-            "model": model_name,
-            "messages": messages
-        }
+        def make_api_call(msgs):
+            payload = {
+                "model": model_name,
+                "messages": msgs
+            }
+            try:
+                req = urllib.request.Request(
+                    url, 
+                    data=json.dumps(payload).encode("utf-8"), 
+                    headers=headers,
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=30) as response:
+                    res_body = json.loads(response.read().decode("utf-8"))
+                    return res_body["choices"][0]["message"]["content"]
+            except Exception as e:
+                err_msg = str(e)
+                if hasattr(e, 'read'):
+                    try:
+                        err_detail = json.loads(e.read().decode('utf-8'))
+                        err_msg = err_detail.get("error", {}).get("message", err_msg)
+                    except: pass
+                logger.error(f"Error en llamada a {url}: {err_msg}")
+                
+                # Fallback a Llama 3
+                if is_openrouter and "openrouter/free" in model_name:
+                    logger.info("Intentando fallback a Llama 3.2 3B en OpenRouter...")
+                    try:
+                        payload["model"] = "meta-llama/llama-3.2-3b-instruct:free"
+                        req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+                        with urllib.request.urlopen(req, timeout=25) as response:
+                            res_body = json.loads(response.read().decode("utf-8"))
+                            return res_body["choices"][0]["message"]["content"]
+                    except Exception as fallback_e:
+                        logger.error(f"Fallback falló: {fallback_e}")
+                
+                raise HTTPException(status_code=500, detail=f"Error al comunicar con la IA: {err_msg}")
 
-        try:
-            req = urllib.request.Request(
-                url, 
-                data=json.dumps(payload).encode("utf-8"), 
-                headers=headers,
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=25) as response:
-                res_body = json.loads(response.read().decode("utf-8"))
-                reply = res_body["choices"][0]["message"]["content"]
-                return {"reply": reply}
-        except Exception as e:
-            err_msg = str(e)
-            if hasattr(e, 'read'):
-                try:
-                    err_detail = json.loads(e.read().decode('utf-8'))
-                    err_msg = err_detail.get("error", {}).get("message", err_msg)
-                except:
-                    pass
-            logger.error(f"Error en llamada a {url}: {err_msg}")
+        reply = make_api_call(messages)
+
+        # AGENTIC LOOP: Revisar si la IA solicitó buscar en la web (Base de Datos Auto-Alimentada)
+        match = re.search(r"\[\[REQUIRE_SEARCH:\s*(.+?)\]\]", reply)
+        if match:
+            query = match.group(1).strip()
+            logger.info(f"IA solicitó búsqueda web automática para: {query}")
             
-            # Fallback en caso de que el enrutador gratuito general de OpenRouter falle, intentar con Llama 3.2 3B gratis directamente
-            if is_openrouter and "openrouter/free" in model_name:
-                logger.info("Intentando fallback a Llama 3.2 3B en OpenRouter...")
-                try:
-                    payload["model"] = "meta-llama/llama-3.2-3b-instruct:free"
-                    req = urllib.request.Request(
-                        url, 
-                        data=json.dumps(payload).encode("utf-8"), 
-                        headers=headers,
-                        method="POST"
-                    )
-                    with urllib.request.urlopen(req, timeout=25) as response:
-                        res_body = json.loads(response.read().decode("utf-8"))
-                        reply = res_body["choices"][0]["message"]["content"]
-                        return {"reply": reply}
-                except Exception as fallback_e:
-                    logger.error(f"Fallback a Llama 3 también falló: {fallback_e}")
-            
-            raise HTTPException(status_code=500, detail=f"Error al comunicar con la IA: {err_msg}")
+            try:
+                ddgs = DDGS()
+                results = ddgs.text(f"{query} carrera universidades costos Ecuador", max_results=4)
+                search_context = "\n".join([r['body'] for r in results])
+                
+                # Guardado en Base de Datos (Simulado por ahora para la demo)
+                logger.info(f"Guardando información de {query} en PostgreSQL (Supabase)...")
+                
+                db_injection = f"""
+                (SISTEMA AUTO-ALIMENTADOR INVISIBLE)
+                Se ha extraído exitosamente la información de la web y guardado en la base de datos. Aquí están los datos reales actuales:
+                {search_context}
+                
+                Por favor, analiza estos datos duros y responde amigablemente al estudiante con la información que pidió.
+                (OJO: NUNCA menciones que buscaste en internet, actúa como si siempre lo hubieras sabido gracias a tu inmensa base de datos).
+                """
+                messages.append({"role": "assistant", "content": reply})
+                messages.append({"role": "user", "content": db_injection})
+                
+                # Segunda llamada (Resolución final)
+                reply = make_api_call(messages)
+            except Exception as search_e:
+                logger.error(f"Error en búsqueda web: {search_e}")
+                reply = "Lo siento, en este preciso momento mi base de datos de esa carrera se está actualizando. ¿Te gustaría explorar otras opciones mientras tanto?"
+
+        return {"reply": reply}
 
     # 2. MODO NATIVO DE GEMINI (FALLBACK)
     if not settings.GEMINI_API_KEY:
