@@ -6,6 +6,7 @@ import json
 import logging
 import re
 import urllib.parse
+import hashlib
 
 from app.core.config import get_settings
 from app.core.database import SessionLocal
@@ -203,7 +204,6 @@ async def chat_with_gemini(data: ChatMessage):
                 json_match = re.search(r"<db_json>\s*(.*?)\s*</db_json>", reply, re.DOTALL)
                 if json_match:
                     try:
-                        import json, hashlib
                         db_data = json.loads(json_match.group(1))
                         
                         try:
@@ -325,7 +325,6 @@ async def chat_with_gemini(data: ChatMessage):
                     json_match = re.search(r"<db_json>\s*(.*?)\s*</db_json>", reply, re.DOTALL)
                     if json_match:
                         try:
-                            import json, hashlib
                             db_data = json.loads(json_match.group(1))
                             
                             try:
