@@ -33,7 +33,6 @@ async def chat_with_gemini(data: ChatMessage):
         "1. Contexto Ecuatoriano: Conoce la realidad académica y laboral de Ecuador (ej. Senescyt, universidades públicas como UCE, EPN, privadas como USFQ, PUCE). Sé realista sobre las oportunidades laborales a nivel nacional e internacional.\n"
         "2. Formato: Responde de forma muy amigable, fluida y empática. NO uses lenguaje robótico.\n"
         "3. Estructura: Usa listas o viñetas (Markdown) para facilitar la lectura. Mantén las respuestas rápidas, directas y concisas (máximo 2 párrafos cortos a menos que te pidan detalles profundos).\n"
-        "4. AUTO-ALIMENTACIÓN (MUY IMPORTANTE): Si el estudiante te pregunta por información específica de una CARRERA (ej. costos, dónde estudiarla, de qué trata) y NO estás 100% seguro de los datos exactos y actuales para ECUADOR, DEBES responder ÚNICAMENTE con esta frase exacta: [[REQUIRE_SEARCH: Nombre de la Carrera en Ecuador]]. No agregues ningún otro texto. Yo buscaré la info en la BD y te la enviaré.\n"
     )
 
     # Si recibimos el contexto del Test Vocacional, inyectarlo dinámicamente en el cerebro del modelo
@@ -51,6 +50,56 @@ async def chat_with_gemini(data: ChatMessage):
             for c in data.context["carreras_recomendadas"]:
                 system_prompt += f"  * {c.get('nombre_carrera')} (Área: {c.get('area_nombre', 'N/A')})\n"
         system_prompt += "============================================================\n"
+
+# BÚSQUEDA PREVENTIVA HEURÍSTICA (SINGLE LLM CALL ARCHITECTURE)
+    search_context = ""
+    query_for_db = None
+    keywords = ["carrera", "estudiar", "universidad", "costo", "información", "informacion", "qué trata", "que trata", "opciones", "salida"]
+    
+    if any(kw in data.message.lower() for kw in keywords) and data.message.strip() != "/debug":
+        import re
+        import urllib.parse
+        import urllib.request
+        match = re.search(r'(?:carrera de|estudiar|sobre la|sobre|en)\s+([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{5,35})', data.message.lower())
+        if match:
+            query_for_db = match.group(1).strip()
+            for stop in [" en ", " ecuador", " y ", " me ", " la ", " las ", " los ", " el ", " quiero ", " saber "]:
+                if query_for_db.endswith(stop.strip()): 
+                    query_for_db = query_for_db.replace(stop, "").strip()
+        
+        try:
+            search_url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote(f"{data.message} universidades costos Ecuador")
+            search_req = urllib.request.Request(search_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+            with urllib.request.urlopen(search_req, timeout=8) as response:
+                html = response.read().decode('utf-8')
+                snippets = re.findall(r'<a class="result__snippet[^>]*>(.*?)</a>', html, re.IGNORECASE | re.DOTALL)
+                clean_snippets = [re.sub(r'<[^>]+>', '', s).strip() for s in snippets]
+                search_context = "\n".join(clean_snippets[:3])
+        except Exception as search_e:
+            logger.error(f"Error Búsqueda Preventiva: {search_e}")
+            
+    if search_context and query_for_db:
+        system_prompt += f"""
+
+=== SISTEMA AUTO-ALIMENTADOR INVISIBLE (BÚSQUEDA PREVENTIVA) ===
+Se extrajo automáticamente la siguiente información web actualizada para la consulta del usuario ({query_for_db}):
+{search_context}
+
+Tu tarea es DOBLE para este mensaje:
+1. Analiza los datos web y crea un bloque JSON estructurado en formato Markdown (```json ... ```) para alimentar la BD. Claves obligatorias:
+{{
+  "id_area": 1, // (1:Realista, 2:Investigador, 3:Artístico, 4:Social, 5:Emprendedor, 6:Convencional)
+  "tipo_opcion": "UNI", // (UNI, TEC, OFI, o CUR)
+  "descripcion": "Resumen conciso max 300 chars",
+  "duracion_meses": 48,
+  "modalidad": "PRE", // (PRE, VIR o HIB)
+  "salida_laboral": "Opciones de trabajo, max 200 chars",
+  "perfil_recomendado": "Aptitudes, max 200 chars",
+  "costo_referencial": 1500.00
+}}
+2. FUERA del bloque JSON, responde muy amigablemente al estudiante con la información solicitada. NO menciones que hiciste una búsqueda web ni que generaste un JSON. Actúa como si ya lo supieras todo.
+============================================================
+"""
 
     # 1. MODO DE PURA COMPATIBILIDAD CON OPENAI / OPENROUTER (RECOMENDADO)
     if settings.OPENAI_API_KEY:
@@ -156,104 +205,9 @@ async def chat_with_gemini(data: ChatMessage):
 
         reply = make_api_call(messages)
 
-        # AGENTIC LOOP: Revisar si la IA solicitó buscar en la web (Base de Datos Auto-Alimentada)
-        match = re.search(r"\[\[REQUIRE_SEARCH:\s*(.+?)\]\]", reply)
-        if match:
-            query = match.group(1).strip()
-            logger.info(f"IA solicitó búsqueda web automática para: {query}")
-            
-            try:
-                # Búsqueda segura en web sin librerías externas que causen SegFault
-                search_url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote(f"{query} carrera universidades costos Ecuador")
-                search_req = urllib.request.Request(search_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
-                with urllib.request.urlopen(search_req, timeout=15) as response:
-                    html = response.read().decode('utf-8')
-                    snippets = re.findall(r'<a class="result__snippet[^>]*>(.*?)</a>', html, re.IGNORECASE | re.DOTALL)
-                    clean_snippets = [re.sub(r'<[^>]+>', '', s).strip() for s in snippets]
-                    search_context = "\n".join(clean_snippets[:4])
-                    
-                    if not search_context:
-                        search_context = "No se encontró información específica en internet en este momento."
-                
-                db_injection = f"""
-                (SISTEMA AUTO-ALIMENTADOR INVISIBLE)
-                Se extrajo la siguiente información de la web para la carrera: {query}
-                {search_context}
-                
-                Tu tarea es DOBLE:
-                1. Analiza los datos y crea un bloque JSON estructurado en formato Markdown (```json ... ```). El JSON debe tener estas claves exactas:
-                {{
-                  "id_area": 1, // (1:Realista, 2:Investigador, 3:Artístico, 4:Social, 5:Emprendedor, 6:Convencional) Elige el mejor basado en RIASEC.
-                  "tipo_opcion": "UNI", // (UNI, TEC, OFI, o CUR)
-                  "descripcion": "Resumen conciso max 300 chars",
-                  "duracion_meses": 48, // (entero, duración aproximada)
-                  "modalidad": "PRE", // (PRE, VIR o HIB)
-                  "salida_laboral": "Opciones de trabajo, max 200 chars",
-                  "perfil_recomendado": "Aptitudes, max 200 chars",
-                  "costo_referencial": 1500.00 // (float, aprox al año, si no hay info pon 0.00)
-                }}
-                2. Fuera del bloque JSON, responde amigablemente al estudiante con la información solicitada. (No menciones que buscaste en internet ni que generaste un JSON).
-                """
-                messages.append({"role": "assistant", "content": reply})
-                messages.append({"role": "user", "content": db_injection})
-                
-                # Segunda llamada (Resolución final estructurada)
-                reply = make_api_call(messages)
-                
-                # Parsear JSON robusto e Insertar en DB
-                json_str = None
-                json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", reply, re.DOTALL)
-                
-                if json_match:
-                    json_str = json_match.group(1)
-                    # Limpiar el bloque Markdown de la respuesta final
-                    reply = re.sub(r"```(?:json)?\s*\{.*?\}\s*```", "", reply, flags=re.DOTALL).strip()
-                else:
-                    # Fallback agresivo: buscar llaves raw si el LLM olvidó el formato markdown
-                    json_match = re.search(r"(\{\s*\"id_area\".*?\})", reply, re.DOTALL)
-                    if json_match:
-                        json_str = json_match.group(1)
-                        reply = reply.replace(json_match.group(1), "").strip()
-
-                if json_str:
-                    try:
-                        db_data = json.loads(json_str)
-                        
-                        try:
-                            db = SessionLocal()
-                            existe = db.query(Carrera).filter(Carrera.nombre_carrera.ilike(f"%{query}%")).first()
-                            if not existe:
-                                tipo_raw = str(db_data.get("tipo_opcion", "UNI")).upper()
-                                tipo_final = "TEC" if "TEC" in tipo_raw else ("OFI" if "OFI" in tipo_raw else ("CUR" if "CUR" in tipo_raw else "UNI"))
-                                
-                                mod_raw = str(db_data.get("modalidad", "PRE")).upper()
-                                mod_final = "VIR" if "VIR" in mod_raw else ("HIB" if "HIB" in mod_raw else "PRE")
-                                
-                                nueva_carrera = Carrera(
-                                    id_area=int(db_data.get("id_area", 1)),
-                                    codigo_carrera=f"IA-{hashlib.md5(query.encode()).hexdigest()[:4].upper()}",
-                                    nombre_carrera=query.capitalize()[:120],
-                                    tipo_opcion=tipo_final,
-                                    descripcion=str(db_data.get("descripcion", search_context[:300]))[:350],
-                                    duracion_meses=int(db_data.get("duracion_meses", 48)),
-                                    modalidad=mod_final,
-                                    salida_laboral=str(db_data.get("salida_laboral", "Datos en proceso."))[:200],
-                                    perfil_recomendado=str(db_data.get("perfil_recomendado", "Estudiantes analíticos."))[:200],
-                                    costo_referencial=float(db_data.get("costo_referencial", 0.00)),
-                                    estado="ACT"
-                                )
-                                db.add(nueva_carrera)
-                                db.commit()
-                                logger.info(f"✅ Carrera '{query}' guardada inteligente en BD.")
-                        except Exception as db_err:
-                            logger.error(f"Error BD al guardar JSON: {db_err}")
-                        finally:
-                            if 'db' in locals(): db.close()
-                    except Exception as parse_e:
-                        logger.error(f"Error parseando json_str: {parse_e}")
-            except Exception as search_e:
-                logger.error(f"Error en búsqueda web: {search_e}")
-                reply = "Lo siento, en este preciso momento mi base de datos de esa carrera se está actualizando. ¿Te gustaría explorar otras opciones mientras tanto?"
+        
+        if search_context and query_for_db:
+            reply = process_and_save_json(reply, query_for_db, search_context)
 
         return {"reply": reply}
 
@@ -297,97 +251,10 @@ async def chat_with_gemini(data: ChatMessage):
             response = chat.send_message(data.message)
             reply = response.text
             
-            # AGENTIC LOOP PARA GEMINI NATIVO
-            match = re.search(r"\[\[REQUIRE_SEARCH:\s*(.+?)\]\]", reply)
-            if match:
-                query = match.group(1).strip()
-                logger.info(f"Gemini solicitó búsqueda web para: {query}")
-                
-                try:
-                    # Búsqueda segura
-                    search_url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote(f"{query} carrera universidades costos Ecuador")
-                    search_req = urllib.request.Request(search_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
-                    with urllib.request.urlopen(search_req, timeout=15) as s_response:
-                        html = s_response.read().decode('utf-8')
-                        snippets = re.findall(r'<a class="result__snippet[^>]*>(.*?)</a>', html, re.IGNORECASE | re.DOTALL)
-                        clean_snippets = [re.sub(r'<[^>]+>', '', s).strip() for s in snippets]
-                        search_context = "\n".join(clean_snippets[:4])
-                        if not search_context: search_context = "No se encontró información."
-                        
-                    db_injection = f"""
-                (SISTEMA AUTO-ALIMENTADOR INVISIBLE)
-                Se extrajo la siguiente información de la web para la carrera: {query}
-                {search_context}
-                
-                Tu tarea es DOBLE:
-                1. Analiza los datos y crea un bloque JSON estructurado en formato Markdown (```json ... ```). El JSON debe tener estas claves exactas:
-                {{
-                  "id_area": 1, // (1:Realista, 2:Investigador, 3:Artístico, 4:Social, 5:Emprendedor, 6:Convencional)
-                  "tipo_opcion": "UNI", // (UNI, TEC, OFI, o CUR)
-                  "descripcion": "Resumen conciso max 300 chars",
-                  "duracion_meses": 48, // (entero, duración aproximada)
-                  "modalidad": "PRE", // (PRE, VIR o HIB)
-                  "salida_laboral": "Opciones de trabajo, max 200 chars",
-                  "perfil_recomendado": "Aptitudes, max 200 chars",
-                  "costo_referencial": 1500.00 // (float, aprox al año, si no hay info pon 0.00)
-                }}
-                2. Fuera del bloque JSON, responde amigablemente al estudiante.
-                """
-                    response2 = chat.send_message(db_injection)
-                    reply = response2.text
-                    
-                    # Parsear JSON robusto e Insertar en DB
-                    json_str = None
-                    json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", reply, re.DOTALL)
-                    
-                    if json_match:
-                        json_str = json_match.group(1)
-                        reply = re.sub(r"```(?:json)?\s*\{.*?\}\s*```", "", reply, flags=re.DOTALL).strip()
-                    else:
-                        json_match = re.search(r"(\{\s*\"id_area\".*?\})", reply, re.DOTALL)
-                        if json_match:
-                            json_str = json_match.group(1)
-                            reply = reply.replace(json_match.group(1), "").strip()
-
-                    if json_str:
-                        try:
-                            db_data = json.loads(json_str)
-                            
-                            try:
-                                db = SessionLocal()
-                                existe = db.query(Carrera).filter(Carrera.nombre_carrera.ilike(f"%{query}%")).first()
-                                if not existe:
-                                    tipo_raw = str(db_data.get("tipo_opcion", "UNI")).upper()
-                                    tipo_final = "TEC" if "TEC" in tipo_raw else ("OFI" if "OFI" in tipo_raw else ("CUR" if "CUR" in tipo_raw else "UNI"))
-                                    
-                                    mod_raw = str(db_data.get("modalidad", "PRE")).upper()
-                                    mod_final = "VIR" if "VIR" in mod_raw else ("HIB" if "HIB" in mod_raw else "PRE")
-                                    
-                                    nueva_carrera = Carrera(
-                                        id_area=int(db_data.get("id_area", 1)),
-                                        codigo_carrera=f"IA-{hashlib.md5(query.encode()).hexdigest()[:4].upper()}",
-                                        nombre_carrera=query.capitalize()[:120],
-                                        tipo_opcion=tipo_final,
-                                        descripcion=str(db_data.get("descripcion", search_context[:300]))[:350],
-                                        duracion_meses=int(db_data.get("duracion_meses", 48)),
-                                        modalidad=mod_final,
-                                        salida_laboral=str(db_data.get("salida_laboral", "Datos en proceso."))[:200],
-                                        perfil_recomendado=str(db_data.get("perfil_recomendado", "Estudiantes analíticos."))[:200],
-                                        costo_referencial=float(db_data.get("costo_referencial", 0.00)),
-                                        estado="ACT"
-                                    )
-                                    db.add(nueva_carrera)
-                                    db.commit()
-                            except Exception as db_err:
-                                logger.error(f"Error BD al guardar JSON: {db_err}")
-                            finally:
-                                if 'db' in locals(): db.close()
-                        except Exception as parse_e:
-                            logger.error(f"Error parseando json_str: {parse_e}")
-                except Exception as search_e:
-                    logger.error(f"Error búsqueda Gemini: {search_e}")
-                    reply = "Lo siento, mi base de datos se está actualizando. ¿Quieres ver otras opciones?"
-                    
+            
+            if search_context and query_for_db:
+                reply = process_and_save_json(reply, query_for_db, search_context)
+            
             return {"reply": reply}
             
         except Exception as inner_e:
