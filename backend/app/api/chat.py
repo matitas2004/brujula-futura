@@ -21,6 +21,63 @@ class ChatMessage(BaseModel):
     history: list[dict] = []
     context: dict = None
 
+def process_and_save_json(text_reply, query_name, context_text):
+    import re
+    import json
+    import hashlib
+    from app.db.session import SessionLocal
+    from app.db.models import Carrera
+    import logging
+    logger = logging.getLogger(__name__)
+
+    json_str = None
+    json_match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", text_reply, re.DOTALL)
+    if json_match:
+        json_str = json_match.group(1)
+        text_reply = re.sub(r"```(?:json)?\s*\{.*?\}\s*```", "", text_reply, flags=re.DOTALL).strip()
+    else:
+        json_match = re.search(r"(\{\s*\"id_area\".*?\})", text_reply, re.DOTALL)
+        if json_match:
+            json_str = json_match.group(1)
+            text_reply = text_reply.replace(json_match.group(1), "").strip()
+
+    if json_str:
+        try:
+            db_data = json.loads(json_str)
+            try:
+                db = SessionLocal()
+                existe = db.query(Carrera).filter(Carrera.nombre_carrera.ilike(f"%{query_name}%")).first()
+                if not existe:
+                    tipo_raw = str(db_data.get("tipo_opcion", "UNI")).upper()
+                    tipo_final = "TEC" if "TEC" in tipo_raw else ("OFI" if "OFI" in tipo_raw else ("CUR" if "CUR" in tipo_raw else "UNI"))
+                    mod_raw = str(db_data.get("modalidad", "PRE")).upper()
+                    mod_final = "VIR" if "VIR" in mod_raw else ("HIB" if "HIB" in mod_raw else "PRE")
+                    
+                    nueva_carrera = Carrera(
+                        id_area=int(db_data.get("id_area", 1)),
+                        codigo_carrera=f"IA-{hashlib.md5(query_name.encode()).hexdigest()[:4].upper()}",
+                        nombre_carrera=query_name.capitalize()[:120],
+                        tipo_opcion=tipo_final,
+                        descripcion=str(db_data.get("descripcion", context_text[:300]))[:350],
+                        duracion_meses=int(db_data.get("duracion_meses", 48)),
+                        modalidad=mod_final,
+                        salida_laboral=str(db_data.get("salida_laboral", "Datos en proceso."))[:200],
+                        perfil_recomendado=str(db_data.get("perfil_recomendado", "Estudiantes analíticos."))[:200],
+                        costo_referencial=float(db_data.get("costo_referencial", 0.00)),
+                        estado="ACT"
+                    )
+                    db.add(nueva_carrera)
+                    db.commit()
+                    logger.info(f"✅ Carrera '{query_name}' guardada inteligente en BD.")
+            except Exception as db_err:
+                logger.error(f"Error BD al guardar JSON preventivo: {db_err}")
+            finally:
+                if 'db' in locals(): db.close()
+        except Exception as parse_e:
+            logger.error(f"Error parseando json_str preventivo: {parse_e}")
+            
+    return text_reply
+
 @router.post("/")
 async def chat_with_gemini(data: ChatMessage):
     settings = get_settings()
@@ -57,9 +114,6 @@ async def chat_with_gemini(data: ChatMessage):
     keywords = ["carrera", "estudiar", "universidad", "costo", "información", "informacion", "qué trata", "que trata", "opciones", "salida"]
     
     if any(kw in data.message.lower() for kw in keywords) and data.message.strip() != "/debug":
-        import re
-        import urllib.parse
-        import urllib.request
         match = re.search(r'(?:carrera de|estudiar|sobre la|sobre|en)\s+([a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{5,35})', data.message.lower())
         if match:
             query_for_db = match.group(1).strip()
