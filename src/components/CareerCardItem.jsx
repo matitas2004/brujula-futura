@@ -1,7 +1,23 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function CareerCardItem({ career, isExpanded, onToggle }) {
+  const [imageUrl, setImageUrl] = useState(null)
   const [imgError, setImgError] = useState(false)
+
+  useEffect(() => {
+    fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(career.name)}&per_page=1`, {
+      headers: { Authorization: 'BdEiOw82PXWNgprypsv9LNMwuC99vpL23x7zMsfhK6BcIpBOaakXkzZn' }
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.photos && data.photos.length > 0) {
+          setImageUrl(data.photos[0].src.landscape)
+        } else {
+          setImgError(true)
+        }
+      })
+      .catch(() => setImgError(true))
+  }, [career.name])
 
   const c = career;
 
@@ -16,9 +32,9 @@ export default function CareerCardItem({ career, isExpanded, onToggle }) {
         <div className="career-card-glow" style={{ background: c.glow }} />
       )}
 
-      {!imgError && (
+      {imageUrl && !imgError && (
         <img
-          src={`https://source.unsplash.com/featured/800x400?${encodeURIComponent(career.name)},carrera`}
+          src={imageUrl}
           alt={career.name}
           onError={() => setImgError(true)}
           style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '12px 12px 0 0', display: 'block' }}
