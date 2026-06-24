@@ -81,24 +81,24 @@ function CarreraModal({ carrera, onClose }) {
           </span>
           <h2>{carrera.nombre_carrera}</h2>
           <div className="modal-meta">
-            <span>📅 {carrera.duracion_meses} meses</span>
-            <span>🏛️ {carrera.tipo_opcion}</span>
+            <span><Clock size={14} /> {carrera.duracion_meses} meses</span>
+            <span><Building2 size={14} /> {carrera.tipo_opcion}</span>
           </div>
           {carrera.salida_laboral && (
             <div className="modal-section">
-              <h4>💼 Salida laboral</h4>
+              <h4><Briefcase size={14} /> Salida laboral</h4>
               <p>{carrera.salida_laboral}</p>
             </div>
           )}
           {carrera.perfil_recomendado && (
             <div className="modal-section">
-              <h4>🎯 Perfil recomendado</h4>
+              <h4><BadgeCheck size={14} /> Perfil recomendado</h4>
               <p>{carrera.perfil_recomendado}</p>
             </div>
           )}
           {carrera.oferta_universitaria?.length > 0 && (
             <div className="modal-section">
-              <h4>🏫 Universidades donde se ofrece</h4>
+              <h4><GraduationCap size={14} /> Universidades donde se ofrece</h4>
               <ul className="modal-unis">
                 {carrera.oferta_universitaria.map((u, i) => (
                   <li key={i}>{u.codigo_universidad} — ${u.costo_referencial_semestre}/semestre</li>
@@ -123,6 +123,7 @@ export default function ExplorerPage() {
   const [vsResult, setVsResult] = useState(null);
   const [vsLoading, setVsLoading] = useState(false);
   const [modalCarrera, setModalCarrera] = useState(null);
+  const [modoVersus, setModoVersus] = useState(false);
 
   useEffect(() => {
     Promise.all([getCarreras(), getUniversidades()])
@@ -238,8 +239,8 @@ export default function ExplorerPage() {
                 ))}
               </div>
 
-              {/* Versus bar */}
-              {selected.length > 0 && (
+              {/* Versus bar — solo en modo selección */}
+              {modoVersus && selected.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -249,8 +250,8 @@ export default function ExplorerPage() {
                     <Swords size={16} /> <strong>{selected.length}</strong>/3 seleccionadas
                   </span>
                   <div className="explorer-vs-actions">
-                    <motion.button className="btn-secondary btn-sm" onClick={() => { setSelected([]); setVsResult(null); }} whileHover={{ scale: 1.05 }}>
-                      <X size={14} /> Limpiar
+                    <motion.button className="btn-secondary btn-sm" onClick={() => { setSelected([]); setVsResult(null); setModoVersus(false); }} whileHover={{ scale: 1.05 }}>
+                      <X size={14} /> Cancelar
                     </motion.button>
                     <motion.button
                       className="btn-primary btn-sm"
@@ -277,7 +278,7 @@ export default function ExplorerPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.04 }}
                         whileHover={{ y: -4 }}
-                        onClick={() => setModalCarrera(c)}
+                        onClick={() => modoVersus ? toggleSelect(c.id_carrera) : setModalCarrera(c)}
                       >
                         {isSelected && (
                           <motion.div className="explorer-check" initial={{ scale: 0 }} animate={{ scale: 1 }}>
@@ -345,9 +346,15 @@ export default function ExplorerPage() {
                 <div className="explorer-empty-vs">
                   <Swords size={40} className="explorer-empty-icon" />
                   <h2>Comparador de Carreras</h2>
-                  <p>Selecciona 2 o 3 carreras en la pestaña "Carreras" y presiona "Comparar".</p>
-                  <motion.button className="btn-primary" onClick={() => setTab('carreras')} whileHover={{ scale: 1.05 }}>
-                    Ir a seleccionar
+                  <p>Elige 2 o 3 carreras y compáralas lado a lado: duración, costos, universidades y salida laboral.</p>
+                  <motion.button
+                    className="btn-primary"
+                    style={{ marginTop: '1.5rem', padding: '14px 36px', fontSize: '1rem' }}
+                    onClick={() => { setModoVersus(true); setTab('carreras'); setSelected([]); setVsResult(null); }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Swords size={16} /> Seleccionar carreras para comparar
                   </motion.button>
                 </div>
               ) : (
