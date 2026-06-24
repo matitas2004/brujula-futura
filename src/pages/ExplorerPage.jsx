@@ -29,19 +29,6 @@ const AreaIcon = ({ name, size = 14 }) => {
   return <Icon size={size} />;
 };
 
-const UNI_IMAGES = {
-  'Universidad San Francisco de Quito': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/USFQ_campus.jpg/800px-USFQ_campus.jpg',
-  'Pontificia Universidad Católica del Ecuador': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/PUCE_campus_Quito.jpg/800px-PUCE_campus_Quito.jpg',
-  'Escuela Politécnica Nacional': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/EPN_fachada.jpg/800px-EPN_fachada.jpg',
-  'Universidad Central del Ecuador': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/UCE_Quito.jpg/800px-UCE_Quito.jpg',
-  'Escuela Superior Politécnica del Litoral': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/ESPOL_campus.jpg/800px-ESPOL_campus.jpg',
-  'Universidad de Cuenca': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Universidad_de_Cuenca.jpg/800px-Universidad_de_Cuenca.jpg',
-  'Universidad de Guayaquil': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Universidad_de_Guayaquil.jpg/800px-Universidad_de_Guayaquil.jpg',
-  'Universidad Politécnica Salesiana': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/UPS_Ecuador.jpg/800px-UPS_Ecuador.jpg',
-  'Universidad Técnica Particular de Loja': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/UTPL_campus.jpg/800px-UTPL_campus.jpg',
-  'Instituto Superior Tecnológico Yavirac': 'https://images.pexels.com/photos/256455/pexels-photo-256455.jpeg',
-}
-
 const CAREER_IMAGES = {
   'Ingeniería en Software': 'https://images.pexels.com/photos/574071/pexels-photo-574071.jpeg',
   'Ciencia de Datos e Inteligencia Artificial': 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg',
@@ -64,12 +51,6 @@ const CAREER_IMAGES = {
 
 function CareerImage({ nombre }) {
   const url = CAREER_IMAGES[nombre]
-  if (!url) return null
-  return <img src={url} alt={nombre} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '10px 10px 0 0', display: 'block', marginBottom: '10px' }} />
-}
-
-function UniImage({ nombre }) {
-  const url = UNI_IMAGES[nombre]
   if (!url) return null
   return <img src={url} alt={nombre} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '10px 10px 0 0', display: 'block', marginBottom: '10px' }} />
 }
@@ -278,7 +259,6 @@ export default function ExplorerPage() {
                         whileHover={{ y: -4 }}
                         onClick={() => trackEvent('UNIVERSITY_CLICK', { universidad: u.nombre_universidad })}
                       >
-                        <UniImage nombre={u.nombre_universidad} />
                         <span className="career-area-tag">
                           <UniIcon size={12} /> {UNI_LABELS[u.tipo_universidad] || u.tipo_universidad}
                         </span>
