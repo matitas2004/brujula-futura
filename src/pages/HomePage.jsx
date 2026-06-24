@@ -21,6 +21,17 @@ const stagger = {
   animate: { transition: { staggerChildren: 0.12 } },
 };
 
+const PREVIEW_CAREERS = [
+  { nombre: 'Medicina', img: 'https://images.pexels.com/photos/4386467/pexels-photo-4386467.jpeg' },
+  { nombre: 'Ingeniería en Software', img: 'https://images.pexels.com/photos/574071/pexels-photo-574071.jpeg' },
+  { nombre: 'Arquitectura', img: 'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg' },
+  { nombre: 'Diseño Gráfico', img: 'https://images.pexels.com/photos/196645/pexels-photo-196645.jpeg' },
+  { nombre: 'Derecho', img: 'https://images.pexels.com/photos/5669619/pexels-photo-5669619.jpeg' },
+  { nombre: 'Psicología', img: 'https://images.pexels.com/photos/5699456/pexels-photo-5699456.jpeg' },
+  { nombre: 'Marketing Digital', img: 'https://images.pexels.com/photos/905163/pexels-photo-905163.jpeg' },
+  { nombre: 'Turismo y Hospitalidad', img: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg' },
+]
+
 export default function HomePage() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({ carreras: 0, universidades: 0 });
@@ -127,6 +138,31 @@ export default function HomePage() {
           <span>Descubre más</span>
           <ChevronDown size={20} />
         </motion.div>
+      </section>
+
+      {/* ── Carreras Preview ─────────────────────── */}
+      <section className="careers-preview-section">
+        <motion.div
+          className="careers-preview-header"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <h2>Carreras que puedes <span className="accent">explorar</span></h2>
+          <p>Desde tecnología hasta salud, encuentra la carrera que va contigo.</p>
+        </motion.div>
+        <div className="careers-preview-track-wrapper">
+          <div className="careers-preview-track">
+            {[...PREVIEW_CAREERS, ...PREVIEW_CAREERS].map((c, i) => (
+              <div key={i} className="career-preview-card" onClick={() => navigate('/explorar')}>
+                <img src={c.img} alt={c.nombre} />
+                <div className="career-preview-overlay">
+                  <span>{c.nombre}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ── Bento Grid Features ────────────────────── */}
