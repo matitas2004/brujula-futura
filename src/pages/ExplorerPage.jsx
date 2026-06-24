@@ -58,6 +58,8 @@ const CAREER_IMAGES = {
   'Arquitectura': 'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg',
   'Diseño Gráfico': 'https://images.pexels.com/photos/196645/pexels-photo-196645.jpeg',
   'Turismo y Hospitalidad': 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg',
+  'Gastronomía': 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+  'Ingeniería Aeroespacial': 'https://images.pexels.com/photos/60132/pexels-photo-60132.jpeg',
 }
 
 function CareerImage({ nombre }) {
