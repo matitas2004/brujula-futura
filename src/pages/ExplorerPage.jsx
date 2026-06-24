@@ -115,6 +115,51 @@ function CarreraModal({ carrera, onClose }) {
   )
 }
 
+const UNI_DATA = {
+  'Universidad San Francisco de Quito': { descripcion: 'Universidad privada de investigación, reconocida como la mejor del Ecuador por QS Rankings.' },
+  'Pontificia Universidad Católica del Ecuador': { descripcion: 'Una de las universidades más prestigiosas del país, con fuerte enfoque humanista y científico.' },
+  'Escuela Politécnica Nacional': { descripcion: 'Referente nacional en ingeniería, ciencias exactas y tecnología desde 1869.' },
+  'Universidad Central del Ecuador': { descripcion: 'La universidad pública más grande del Ecuador, con más de 180 años de historia.' },
+  'Escuela Superior Politécnica del Litoral': { descripcion: 'Líder en ciencias aplicadas, tecnología e innovación en la región Costa.' },
+  'Universidad de Cuenca': { descripcion: 'Principal universidad pública del Austro ecuatoriano, reconocida por su calidad académica.' },
+  'Universidad de Guayaquil': { descripcion: 'La universidad pública con mayor cantidad de estudiantes en Ecuador.' },
+  'Universidad Politécnica Salesiana': { descripcion: 'Universidad privada con enfoque salesiano, fuerte en ingeniería y ciencias sociales.' },
+  'Universidad Técnica Particular de Loja': { descripcion: 'Pionera en educación a distancia y virtual en Latinoamérica.' },
+  'Instituto Superior Tecnológico Yavirac': { descripcion: 'Instituto tecnológico público de Quito enfocado en formación técnica y tecnológica.' },
+}
+
+function UniversidadModal({ uni, onClose }) {
+  if (!uni) return null
+  const data = UNI_DATA[uni.nombre_universidad] || {}
+  const tipoLabel = { PUB: 'Pública', PRI: 'Privada', TEC: 'Tecnológico', INS: 'Instituto' }
+  return (
+    <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+      <motion.div className="modal-content" initial={{ opacity: 0, y: 60, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 60, scale: 0.95 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} onClick={e => e.stopPropagation()}>
+        <div className="modal-body">
+          <span className="career-area-tag" style={{ marginBottom: '0.5rem', display: 'inline-flex' }}>{tipoLabel[uni.tipo_universidad] || uni.tipo_universidad}</span>
+          <h2>{uni.nombre_universidad}</h2>
+          <div className="modal-meta">
+            <span><MapPin size={14} /> {uni.ciudad}, {uni.provincia}</span>
+          </div>
+          {data.descripcion && (
+            <div className="modal-section">
+              <p>{data.descripcion}</p>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
+            {uni.sitio_web && (
+              <a href={uni.sitio_web} target="_blank" rel="noreferrer" className="btn-primary" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                <ExternalLink size={15} /> Visitar sitio web
+              </a>
+            )}
+            <button className="btn-secondary" onClick={onClose}>Cerrar</button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 export default function ExplorerPage() {
   const [carreras, setCarreras] = useState([]);
   const [universidades, setUniversidades] = useState([]);
@@ -126,6 +171,7 @@ export default function ExplorerPage() {
   const [vsLoading, setVsLoading] = useState(false);
   const [modalCarrera, setModalCarrera] = useState(null);
   const [modoVersus, setModoVersus] = useState(false);
+  const [modalUniversidad, setModalUniversidad] = useState(null);
 
   useEffect(() => {
     Promise.all([getCarreras(), getUniversidades()])
@@ -319,7 +365,7 @@ export default function ExplorerPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.06 }}
                         whileHover={{ y: -4 }}
-                        onClick={() => trackEvent('UNIVERSITY_CLICK', { universidad: u.nombre_universidad })}
+                        onClick={() => { trackEvent('UNIVERSITY_CLICK', { universidad: u.nombre_universidad }); setModalUniversidad(u); }}
                       >
                         <span className="career-area-tag">
                           <UniIcon size={12} /> {UNI_LABELS[u.tipo_universidad] || u.tipo_universidad}
@@ -328,11 +374,6 @@ export default function ExplorerPage() {
                         <div className="career-meta">
                           <span><MapPin size={13} /> {u.ciudad}, {u.provincia}</span>
                         </div>
-                        {u.sitio_web && (
-                          <a href={u.sitio_web} target="_blank" rel="noopener noreferrer" className="explorer-web-link" onClick={e => e.stopPropagation()}>
-                            <ExternalLink size={13} /> Visitar sitio web
-                          </a>
-                        )}
                       </motion.div>
                     );
                   })}
@@ -415,6 +456,7 @@ export default function ExplorerPage() {
 
         <AnimatePresence>
           {modalCarrera && <CarreraModal carrera={modalCarrera} onClose={() => setModalCarrera(null)} />}
+          {modalUniversidad && <UniversidadModal uni={modalUniversidad} onClose={() => setModalUniversidad(null)} />}
         </AnimatePresence>
       </section>
     </AnimatedPage>
