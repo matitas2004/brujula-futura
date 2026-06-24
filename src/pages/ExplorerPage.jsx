@@ -358,97 +358,54 @@ export default function ExplorerPage() {
                   </motion.button>
                 </div>
               ) : (
-                <div>
-                  <div className="explorer-vs-grid" style={{ gridTemplateColumns: `repeat(${vsResult.carreras.length}, 1fr)` }}>
-                    {vsResult.carreras.map((c, i) => (
-                      <motion.div
-                        key={c.id_carrera}
-                        className="explorer-card"
-                        initial={{ opacity: 0, y: 40 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.12 }}
-                      >
-                        <span className="career-area-tag">
-                          <AreaIcon name={c.area_nombre} size={12} /> {c.area_nombre}
-                        </span>
-                        <h3>{c.nombre_carrera}</h3>
-                        <div className="vs-detail-list">
-                          <div className="vs-detail-row">
-                            <span><Clock size={13} /> Duración</span>
-                            <strong>{c.duracion_meses} meses</strong>
-                          </div>
-                          <div className="vs-detail-row">
-                            <span><DollarSign size={13} /> Costo</span>
-                            <strong>{c.costo_promedio ? `$${c.costo_promedio}` : 'Gratuita'}</strong>
-                          </div>
-                          <div className="vs-detail-row">
-                            <span><Building2 size={13} /> Universidades</span>
-                            <strong>{c.universidades_disponibles}</strong>
-                          </div>
-                          <div className="vs-detail-row">
-                            <span><BookOpen size={13} /> Modalidades</span>
-                            <strong>{c.modalidades.join(', ') || '—'}</strong>
+                <motion.div key="versus-result" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                  <div className="vs-cards-grid">
+                    {vsResult.carreras?.map((c, i) => {
+                      const img = CAREER_IMAGES[c.nombre_carrera]
+                      return (
+                        <div key={i} className="vs-card">
+                          {img && <img src={img} alt={c.nombre_carrera} style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '12px 12px 0 0' }} />}
+                          <div className="vs-card-body">
+                            <span className="career-area-tag">{c.area_nombre}</span>
+                            <h3>{c.nombre_carrera}</h3>
+                            <div className="vs-card-stats">
+                              <div className="vs-stat"><span className="vs-stat-label">Duración</span><span className="vs-stat-value">{c.duracion_meses} meses</span></div>
+                              <div className="vs-stat"><span className="vs-stat-label">Costo</span><span className="vs-stat-value">{c.costo_promedio ? '$' + c.costo_promedio : 'Gratuita'}</span></div>
+                              <div className="vs-stat"><span className="vs-stat-label">Universidades</span><span className="vs-stat-value">{c.num_universidades ?? c.universidades_disponibles}</span></div>
+                              <div className="vs-stat"><span className="vs-stat-label">Modalidades</span><span className="vs-stat-value">{c.modalidades?.join(', ')}</span></div>
+                            </div>
+                            <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', marginTop: '0.75rem', lineHeight: 1.5 }}>{c.salida_laboral}</p>
                           </div>
                         </div>
-                        <p className="vs-salida">{c.salida_laboral}</p>
-                      </motion.div>
-                    ))}
+                      )
+                    })}
                   </div>
 
-                  {/* Analysis */}
-                  <motion.div
-                    className="explorer-analysis"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <h3><BarChart3 size={20} /> Análisis Comparativo</h3>
-                    <div className="analysis-grid">
-                      {vsResult.analisis.mas_corta && (
-                        <div className="analysis-item">
-                          <Clock size={20} className="analysis-icon" />
-                          <div>
-                            <p className="analysis-label">Más corta</p>
-                            <p className="analysis-value">{vsResult.analisis.mas_corta.nombre} — {vsResult.analisis.mas_corta.duracion_meses} meses</p>
-                          </div>
+                  <div className="vs-analysis">
+                    <h3>Análisis Comparativo</h3>
+                    <div className="vs-analysis-grid">
+                      {Array.isArray(vsResult.analisis) ? vsResult.analisis.map((item, i) => (
+                        <div key={i} className="vs-analysis-card">
+                          <span className="vs-analysis-label">{item.categoria}</span>
+                          <span className="vs-analysis-value">{item.ganador}</span>
+                          <span className="vs-analysis-detail">{item.detalle}</span>
                         </div>
-                      )}
-                      {vsResult.analisis.mas_economica && (
-                        <div className="analysis-item">
-                          <DollarSign size={20} className="analysis-icon" />
-                          <div>
-                            <p className="analysis-label">Más económica</p>
-                            <p className="analysis-value">{vsResult.analisis.mas_economica.nombre} — ${vsResult.analisis.mas_economica.costo_promedio}/sem</p>
-                          </div>
-                        </div>
-                      )}
-                      {vsResult.analisis.mas_opciones && (
-                        <div className="analysis-item">
-                          <Building2 size={20} className="analysis-icon" />
-                          <div>
-                            <p className="analysis-label">Más opciones</p>
-                            <p className="analysis-value">{vsResult.analisis.mas_opciones.nombre} — {vsResult.analisis.mas_opciones.universidades} universidades</p>
-                          </div>
-                        </div>
-                      )}
-                      {vsResult.analisis.opciones_gratuitas?.length > 0 && (
-                        <div className="analysis-item">
-                          <BadgeCheck size={20} className="analysis-icon" />
-                          <div>
-                            <p className="analysis-label">Opciones gratuitas</p>
-                            <p className="analysis-value">{vsResult.analisis.opciones_gratuitas.join(', ')}</p>
-                          </div>
-                        </div>
+                      )) : (
+                        // Fallback para la estructura anterior del backend
+                        <>
+                          {vsResult.analisis?.mas_corta && <div className="vs-analysis-card"><span className="vs-analysis-label">Más corta</span><span className="vs-analysis-value">{vsResult.analisis.mas_corta.nombre}</span><span className="vs-analysis-detail">{vsResult.analisis.mas_corta.duracion_meses} meses</span></div>}
+                          {vsResult.analisis?.mas_economica && <div className="vs-analysis-card"><span className="vs-analysis-label">Más económica</span><span className="vs-analysis-value">{vsResult.analisis.mas_economica.nombre}</span><span className="vs-analysis-detail">${vsResult.analisis.mas_economica.costo_promedio}/sem</span></div>}
+                          {vsResult.analisis?.mas_opciones && <div className="vs-analysis-card"><span className="vs-analysis-label">Más opciones</span><span className="vs-analysis-value">{vsResult.analisis.mas_opciones.nombre}</span><span className="vs-analysis-detail">{vsResult.analisis.mas_opciones.universidades} universidades</span></div>}
+                          {vsResult.analisis?.opciones_gratuitas?.length > 0 && <div className="vs-analysis-card"><span className="vs-analysis-label">Gratuitas</span><span className="vs-analysis-value">{vsResult.analisis.opciones_gratuitas.join(', ')}</span><span className="vs-analysis-detail">Sin costo</span></div>}
+                        </>
                       )}
                     </div>
-                  </motion.div>
-
-                  <div className="explorer-vs-reset">
-                    <motion.button className="btn-secondary" onClick={() => { setSelected([]); setVsResult(null); setTab('carreras'); }} whileHover={{ scale: 1.05 }}>
-                      <RotateCcw size={16} /> Nueva comparación
-                    </motion.button>
                   </div>
-                </div>
+
+                  <button className="btn-secondary" style={{ marginTop: '1.5rem' }} onClick={() => { setVsResult(null); setSelected([]); setModoVersus(false); setTab('carreras'); }}>
+                    <RotateCcw size={14} /> Nueva comparación
+                  </button>
+                </motion.div>
               )}
             </motion.div>
           )}

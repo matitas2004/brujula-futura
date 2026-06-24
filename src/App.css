@@ -425,6 +425,87 @@
   font-size: 0.85rem;
 }
 
+/* ─── Versus Cards ───────────────────────────────── */
+.vs-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+.vs-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.vs-card-body {
+  padding: 1.25rem;
+}
+.vs-card-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.vs-stat {
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.vs-stat-label {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.vs-stat-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+}
+.vs-analysis {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+.vs-analysis h3 {
+  margin-bottom: 1rem;
+  color: #fff;
+}
+.vs-analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+.vs-analysis-card {
+  background: rgba(124,58,237,0.1);
+  border: 1px solid rgba(124,58,237,0.2);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.vs-analysis-label {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.vs-analysis-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #a78bfa;
+}
+.vs-analysis-detail {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.6);
+}
+
 /* ─── Responsive ─────────────────────────────────── */
 @media (max-width: 768px) {
   .section { padding: 72px 0; }
