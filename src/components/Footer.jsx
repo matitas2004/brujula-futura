@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Compass, Github } from 'lucide-react'
+import { Compass } from 'lucide-react'
 
 export default function Footer() {
   const navigate = useNavigate()
@@ -18,9 +18,6 @@ export default function Footer() {
           <button className="ft2-link" onClick={() => navigate('/')}>Inicio</button>
           <button className="ft2-link" onClick={() => navigate('/test')}>Test</button>
           <button className="ft2-link" onClick={() => navigate('/explorar')}>Explorar</button>
-          <a className="ft2-link" href="https://github.com/matitas2004/brujula-futura" target="_blank" rel="noreferrer">
-            <Github size={14} /> GitHub
-          </a>
         </nav>
       </div>
 
