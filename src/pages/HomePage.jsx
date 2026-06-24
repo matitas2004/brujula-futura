@@ -179,9 +179,9 @@ export default function HomePage() {
         </motion.div>
 
         <div className="bento-grid">
-          {/* Card Principal — Test RIASEC (ocupa 2 columnas en desktop) */}
           <motion.div
             className="bento-card bento-card-featured"
+            style={{ backgroundImage: 'url(https://images.pexels.com/photos/3768894/pexels-photo-3768894.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden' }}
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -189,32 +189,24 @@ export default function HomePage() {
             whileHover={{ y: -6 }}
             onClick={() => navigate('/test')}
           >
-            <div className="bento-card-glow bento-glow-violet" />
-            <div className="bento-card-content">
-              <div className="bento-icon-box bento-icon-violet">
-                <Brain size={28} />
-              </div>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(124,58,237,0.85), rgba(0,0,0,0.7))', borderRadius: 'inherit' }} />
+            <div className="bento-card-content" style={{ position: 'relative', zIndex: 1 }}>
+              <div className="bento-icon-box bento-icon-violet"><Brain size={28} /></div>
               <div className="bento-step-badge">Paso 1</div>
               <h3>Test Vocacional RIASEC</h3>
-              <p>
-                Responde 18 preguntas basadas en el modelo de Holland, utilizado por psicólogos
-                vocacionales a nivel mundial. Descubre tu perfil de personalidad y las áreas
-                profesionales que mejor se alinean contigo.
-              </p>
+              <p>Responde 18 preguntas basadas en el modelo de Holland. Descubre tu perfil de personalidad y las áreas que mejor se alinean contigo.</p>
               <div className="bento-card-tags">
                 <span><Clock size={12} /> 5 minutos</span>
                 <span><Shield size={12} /> Científicamente validado</span>
                 <span><Zap size={12} /> Resultados instantáneos</span>
               </div>
-              <div className="bento-card-cta">
-                Comenzar test <ArrowRight size={16} />
-              </div>
+              <div className="bento-card-cta">Comenzar test <ArrowRight size={16} /></div>
             </div>
           </motion.div>
 
-          {/* Card — Explorar Carreras */}
           <motion.div
             className="bento-card"
+            style={{ backgroundImage: 'url(https://images.pexels.com/photos/1181622/pexels-photo-1181622.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden' }}
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -222,26 +214,19 @@ export default function HomePage() {
             whileHover={{ y: -6 }}
             onClick={() => navigate('/explorar')}
           >
-            <div className="bento-card-glow bento-glow-cyan" />
-            <div className="bento-card-content">
-              <div className="bento-icon-box bento-icon-cyan">
-                <GraduationCap size={24} />
-              </div>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(6,182,212,0.85), rgba(0,0,0,0.7))', borderRadius: 'inherit' }} />
+            <div className="bento-card-content" style={{ position: 'relative', zIndex: 1 }}>
+              <div className="bento-icon-box bento-icon-cyan"><GraduationCap size={24} /></div>
               <div className="bento-step-badge">Paso 2</div>
               <h3>Explorar Carreras</h3>
-              <p>
-                Navega entre {stats.carreras || '15'}+ carreras con datos reales de
-                universidades ecuatorianas: costos, duración, modalidades y salida laboral.
-              </p>
-              <div className="bento-card-cta">
-                Ver carreras <ArrowRight size={16} />
-              </div>
+              <p>Navega entre {stats.carreras || '15'}+ carreras con datos reales de universidades ecuatorianas: costos, duración y salida laboral.</p>
+              <div className="bento-card-cta">Ver carreras <ArrowRight size={16} /></div>
             </div>
           </motion.div>
 
-          {/* Card — Versus */}
           <motion.div
             className="bento-card"
+            style={{ backgroundImage: 'url(https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg)', backgroundSize: 'cover', backgroundPosition: 'center', position: 'relative', overflow: 'hidden' }}
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -249,20 +234,13 @@ export default function HomePage() {
             whileHover={{ y: -6 }}
             onClick={() => navigate('/explorar')}
           >
-            <div className="bento-card-glow bento-glow-emerald" />
-            <div className="bento-card-content">
-              <div className="bento-icon-box bento-icon-emerald">
-                <Swords size={24} />
-              </div>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(16,185,129,0.85), rgba(0,0,0,0.7))', borderRadius: 'inherit' }} />
+            <div className="bento-card-content" style={{ position: 'relative', zIndex: 1 }}>
+              <div className="bento-icon-box bento-icon-emerald"><Swords size={24} /></div>
               <div className="bento-step-badge">Paso 3</div>
               <h3>Comparar Opciones</h3>
-              <p>
-                Selecciona hasta 3 carreras y compáralas lado a lado: costos promedio,
-                duración, universidades disponibles y campo laboral.
-              </p>
-              <div className="bento-card-cta">
-                Comparar <ArrowRight size={16} />
-              </div>
+              <p>Selecciona hasta 3 carreras y compáralas lado a lado: costos, duración, universidades y campo laboral.</p>
+              <div className="bento-card-cta">Comparar <ArrowRight size={16} /></div>
             </div>
           </motion.div>
         </div>
