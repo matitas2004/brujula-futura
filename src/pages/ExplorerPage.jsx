@@ -29,6 +29,20 @@ const AreaIcon = ({ name, size = 14 }) => {
   return <Icon size={size} />;
 };
 
+function CareerImage({ nombre }) {
+  const [url, setUrl] = useState(null)
+  useEffect(() => {
+    fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(nombre)}&per_page=1`, {
+      headers: { Authorization: 'BdEiOw82PXWNgprypsv9LNMwuC99vpL23x7zMsfhK6BcIpBOaakXkzZn' }
+    })
+      .then(r => r.json())
+      .then(data => { if (data.photos?.length > 0) setUrl(data.photos[0].src.landscape) })
+      .catch(() => {})
+  }, [nombre])
+  if (!url) return null
+  return <img src={url} alt={nombre} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '10px 10px 0 0', display: 'block', marginBottom: '10px' }} />
+}
+
 export default function ExplorerPage() {
   const [carreras, setCarreras] = useState([]);
   const [universidades, setUniversidades] = useState([]);
@@ -199,6 +213,7 @@ export default function ExplorerPage() {
                             <Check size={14} />
                           </motion.div>
                         )}
+                        <CareerImage nombre={c.nombre_carrera} />
                         <span className="career-area-tag">
                           <AreaIcon name={c.area_nombre} size={12} /> {c.area_nombre}
                         </span>
