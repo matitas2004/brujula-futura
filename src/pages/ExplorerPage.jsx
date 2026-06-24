@@ -29,16 +29,45 @@ const AreaIcon = ({ name, size = 14 }) => {
   return <Icon size={size} />;
 };
 
+const UNI_IMAGES = {
+  'Universidad San Francisco de Quito': 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/USFQ_campus.jpg/800px-USFQ_campus.jpg',
+  'Pontificia Universidad Católica del Ecuador': 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/PUCE_campus_Quito.jpg/800px-PUCE_campus_Quito.jpg',
+  'Escuela Politécnica Nacional': 'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/EPN_fachada.jpg/800px-EPN_fachada.jpg',
+  'Universidad Central del Ecuador': 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/UCE_Quito.jpg/800px-UCE_Quito.jpg',
+  'Escuela Superior Politécnica del Litoral': 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/ESPOL_campus.jpg/800px-ESPOL_campus.jpg',
+  'Universidad de Cuenca': 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Universidad_de_Cuenca.jpg/800px-Universidad_de_Cuenca.jpg',
+  'Universidad de Guayaquil': 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Universidad_de_Guayaquil.jpg/800px-Universidad_de_Guayaquil.jpg',
+  'Universidad Politécnica Salesiana': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/UPS_Ecuador.jpg/800px-UPS_Ecuador.jpg',
+  'Universidad Técnica Particular de Loja': 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/UTPL_campus.jpg/800px-UTPL_campus.jpg',
+  'Instituto Superior Tecnológico Yavirac': 'https://images.pexels.com/photos/256455/pexels-photo-256455.jpeg',
+}
+
+const CAREER_IMAGES = {
+  'Ingeniería en Software': 'https://images.pexels.com/photos/574071/pexels-photo-574071.jpeg',
+  'Ciencia de Datos e Inteligencia Artificial': 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg',
+  'Medicina': 'https://images.pexels.com/photos/4386467/pexels-photo-4386467.jpeg',
+  'Enfermería': 'https://images.pexels.com/photos/3985163/pexels-photo-3985163.jpeg',
+  'Psicología': 'https://images.pexels.com/photos/5699456/pexels-photo-5699456.jpeg',
+  'Educación Inicial': 'https://images.pexels.com/photos/8613089/pexels-photo-8613089.jpeg',
+  'Derecho': 'https://images.pexels.com/photos/5669619/pexels-photo-5669619.jpeg',
+  'Administración de Empresas': 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg',
+  'Marketing Digital': 'https://images.pexels.com/photos/905163/pexels-photo-905163.jpeg',
+  'Contabilidad y Auditoría': 'https://images.pexels.com/photos/6693661/pexels-photo-6693661.jpeg',
+  'Ingeniería Civil': 'https://images.pexels.com/photos/1078884/pexels-photo-1078884.jpeg',
+  'Electricidad y Automatización': 'https://images.pexels.com/photos/257736/pexels-photo-257736.jpeg',
+  'Arquitectura': 'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg',
+  'Diseño Gráfico': 'https://images.pexels.com/photos/196645/pexels-photo-196645.jpeg',
+  'Turismo y Hospitalidad': 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg',
+}
+
 function CareerImage({ nombre }) {
-  const [url, setUrl] = useState(null)
-  useEffect(() => {
-    fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(nombre)}&per_page=1`, {
-      headers: { Authorization: 'BdEiOw82PXWNgprypsv9LNMwuC99vpL23x7zMsfhK6BcIpBOaakXkzZn' }
-    })
-      .then(r => r.json())
-      .then(data => { if (data.photos?.length > 0) setUrl(data.photos[0].src.landscape) })
-      .catch(() => {})
-  }, [nombre])
+  const url = CAREER_IMAGES[nombre]
+  if (!url) return null
+  return <img src={url} alt={nombre} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '10px 10px 0 0', display: 'block', marginBottom: '10px' }} />
+}
+
+function UniImage({ nombre }) {
+  const url = UNI_IMAGES[nombre]
   if (!url) return null
   return <img src={url} alt={nombre} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '10px 10px 0 0', display: 'block', marginBottom: '10px' }} />
 }
@@ -247,7 +276,7 @@ export default function ExplorerPage() {
                         whileHover={{ y: -4 }}
                         onClick={() => trackEvent('UNIVERSITY_CLICK', { universidad: u.nombre_universidad })}
                       >
-                        <CareerImage nombre={u.nombre_universidad} />
+                        <UniImage nombre={u.nombre_universidad} />
                         <span className="career-area-tag">
                           <UniIcon size={12} /> {UNI_LABELS[u.tipo_universidad] || u.tipo_universidad}
                         </span>
