@@ -361,6 +361,12 @@
   font-size: 0.9rem;
 }
 
+.bento-card-content h3 { color: #ffffff; }
+.bento-card-content p { color: rgba(255,255,255,0.85); }
+.bento-card-content .bento-step-badge { color: rgba(255,255,255,0.7); }
+.bento-card-content .bento-card-cta { color: #ffffff; }
+.bento-card-tags span { color: rgba(255,255,255,0.8); }
+
 /* ─── Responsive ─────────────────────────────────── */
 @media (max-width: 768px) {
   .section { padding: 72px 0; }
