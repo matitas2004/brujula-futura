@@ -845,6 +845,16 @@
   color: rgba(255,255,255,0.2);
 }
 
+/* ─── University Modal Stats ─────────────────────── */
+.uni-stats { display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem; }
+.uni-stat-row { display: grid; grid-template-columns: 1fr 2fr auto; align-items: center; gap: 0.75rem; font-size: 0.82rem; color: rgba(255,255,255,0.7); }
+.uni-bar-bg { height: 6px; background: rgba(255,255,255,0.08); border-radius: 99px; overflow: hidden; }
+.uni-bar-fill { height: 100%; border-radius: 99px; transition: width 0.8s ease; }
+.uni-bar-val { font-size: 0.75rem; color: rgba(255,255,255,0.4); white-space: nowrap; }
+.uni-carreras-list { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.5rem; }
+.uni-carrera-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 0.5rem 0.75rem; font-size: 0.85rem; color: rgba(255,255,255,0.8); }
+.uni-carrera-costo { color: #a78bfa; font-weight: 600; font-size: 0.8rem; }
+
 /* ─── Responsive ─────────────────────────────────── */
 @media (max-width: 768px) {
   .section { padding: 72px 0; }

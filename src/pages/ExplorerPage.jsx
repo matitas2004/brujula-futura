@@ -116,22 +116,27 @@ function CarreraModal({ carrera, onClose }) {
 }
 
 const UNI_DATA = {
-  'Universidad San Francisco de Quito': { descripcion: 'Universidad privada de investigación, reconocida como la mejor del Ecuador por QS Rankings.' },
-  'Pontificia Universidad Católica del Ecuador': { descripcion: 'Una de las universidades más prestigiosas del país, con fuerte enfoque humanista y científico.' },
-  'Escuela Politécnica Nacional': { descripcion: 'Referente nacional en ingeniería, ciencias exactas y tecnología desde 1869.' },
-  'Universidad Central del Ecuador': { descripcion: 'La universidad pública más grande del Ecuador, con más de 180 años de historia.' },
-  'Escuela Superior Politécnica del Litoral': { descripcion: 'Líder en ciencias aplicadas, tecnología e innovación en la región Costa.' },
-  'Universidad de Cuenca': { descripcion: 'Principal universidad pública del Austro ecuatoriano, reconocida por su calidad académica.' },
-  'Universidad de Guayaquil': { descripcion: 'La universidad pública con mayor cantidad de estudiantes en Ecuador.' },
-  'Universidad Politécnica Salesiana': { descripcion: 'Universidad privada con enfoque salesiano, fuerte en ingeniería y ciencias sociales.' },
-  'Universidad Técnica Particular de Loja': { descripcion: 'Pionera en educación a distancia y virtual en Latinoamérica.' },
-  'Instituto Superior Tecnológico Yavirac': { descripcion: 'Instituto tecnológico público de Quito enfocado en formación técnica y tecnológica.' },
+  'Universidad San Francisco de Quito': { descripcion: 'Universidad privada de investigación, reconocida como la mejor del Ecuador por QS Rankings.', fundacion: 1988, ranking: 95, internacional: 90, investigacion: 88 },
+  'Pontificia Universidad Católica del Ecuador': { descripcion: 'Una de las universidades más prestigiosas del país, con fuerte enfoque humanista y científico.', fundacion: 1946, ranking: 85, internacional: 70, investigacion: 80 },
+  'Escuela Politécnica Nacional': { descripcion: 'Referente nacional en ingeniería, ciencias exactas y tecnología desde 1869.', fundacion: 1869, ranking: 88, internacional: 72, investigacion: 90 },
+  'Universidad Central del Ecuador': { descripcion: 'La universidad pública más grande del Ecuador, con más de 180 años de historia.', fundacion: 1826, ranking: 70, internacional: 50, investigacion: 65 },
+  'Escuela Superior Politécnica del Litoral': { descripcion: 'Líder en ciencias aplicadas, tecnología e innovación en la región Costa.', fundacion: 1958, ranking: 82, internacional: 75, investigacion: 85 },
+  'Universidad de Cuenca': { descripcion: 'Principal universidad pública del Austro ecuatoriano, reconocida por su calidad académica.', fundacion: 1867, ranking: 75, internacional: 60, investigacion: 70 },
+  'Universidad de Guayaquil': { descripcion: 'La universidad pública con mayor cantidad de estudiantes en Ecuador.', fundacion: 1867, ranking: 65, internacional: 45, investigacion: 60 },
+  'Universidad Politécnica Salesiana': { descripcion: 'Universidad privada con enfoque salesiano, fuerte en ingeniería y ciencias sociales.', fundacion: 1994, ranking: 72, internacional: 65, investigacion: 68 },
+  'Universidad Técnica Particular de Loja': { descripcion: 'Pionera en educación a distancia y virtual en Latinoamérica.', fundacion: 1971, ranking: 78, internacional: 80, investigacion: 74 },
+  'Instituto Superior Tecnológico Yavirac': { descripcion: 'Instituto tecnológico público de Quito enfocado en formación técnica y tecnológica.', fundacion: 1945, ranking: 60, internacional: 30, investigacion: 55 },
 }
 
-function UniversidadModal({ uni, onClose }) {
+function UniversidadModal({ uni, carreras = [], onClose }) {
   if (!uni) return null
   const data = UNI_DATA[uni.nombre_universidad] || {}
   const tipoLabel = { PUB: 'Pública', PRI: 'Privada', TEC: 'Tecnológico', INS: 'Instituto' }
+
+  const carrerasDeEstaUni = carreras.filter(c =>
+    c.oferta_universitaria?.some(o => o.codigo_universidad === uni.codigo_universidad)
+  )
+
   return (
     <motion.div className="modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
       <motion.div className="modal-content" initial={{ opacity: 0, y: 60, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 60, scale: 0.95 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} onClick={e => e.stopPropagation()}>
@@ -141,11 +146,54 @@ function UniversidadModal({ uni, onClose }) {
           <div className="modal-meta">
             <span><MapPin size={14} /> {uni.ciudad}, {uni.provincia}</span>
           </div>
+
           {data.descripcion && (
             <div className="modal-section">
               <p>{data.descripcion}</p>
             </div>
           )}
+
+          {data.ranking && (
+            <div className="modal-section">
+              <h4><BarChart3 size={14} /> Indicadores</h4>
+              <div className="uni-stats">
+                <div className="uni-stat-row">
+                  <span>Ranking nacional</span>
+                  <div className="uni-bar-bg"><div className="uni-bar-fill" style={{ width: `${data.ranking}%`, background: 'linear-gradient(90deg, #7c3aed, #a78bfa)' }} /></div>
+                  <span className="uni-bar-val">{data.ranking}/100</span>
+                </div>
+                <div className="uni-stat-row">
+                  <span>Internacional</span>
+                  <div className="uni-bar-bg"><div className="uni-bar-fill" style={{ width: `${data.internacional}%`, background: 'linear-gradient(90deg, #0ea5e9, #38bdf8)' }} /></div>
+                  <span className="uni-bar-val">{data.internacional}/100</span>
+                </div>
+                <div className="uni-stat-row">
+                  <span>Investigación</span>
+                  <div className="uni-bar-bg"><div className="uni-bar-fill" style={{ width: `${data.investigacion}%`, background: 'linear-gradient(90deg, #10b981, #34d399)' }} /></div>
+                  <span className="uni-bar-val">{data.investigacion}/100</span>
+                </div>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginTop: '0.5rem' }}>Fundada en {data.fundacion}</p>
+            </div>
+          )}
+
+          {carrerasDeEstaUni.length > 0 && (
+            <div className="modal-section">
+              <h4><GraduationCap size={14} /> Carreras disponibles</h4>
+              <div className="uni-carreras-list">
+                {carrerasDeEstaUni.map((c, i) => {
+                  const oferta = c.oferta_universitaria?.find(o => o.codigo_universidad === uni.codigo_universidad)
+                  return (
+                    <div key={i} className="uni-carrera-item">
+                      <span>{c.nombre_carrera}</span>
+                      <span className="uni-carrera-costo">{oferta?.costo_referencial_semestre ? '$' + oferta.costo_referencial_semestre + '/sem' : 'Gratuita'}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
             {uni.sitio_web && (
               <a href={uni.sitio_web} target="_blank" rel="noreferrer" className="btn-primary" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
@@ -456,7 +504,7 @@ export default function ExplorerPage() {
 
         <AnimatePresence>
           {modalCarrera && <CarreraModal carrera={modalCarrera} onClose={() => setModalCarrera(null)} />}
-          {modalUniversidad && <UniversidadModal uni={modalUniversidad} onClose={() => setModalUniversidad(null)} />}
+          {modalUniversidad && <UniversidadModal uni={modalUniversidad} carreras={carreras} onClose={() => setModalUniversidad(null)} />}
         </AnimatePresence>
       </section>
     </AnimatedPage>
