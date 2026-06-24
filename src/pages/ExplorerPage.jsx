@@ -55,6 +55,64 @@ function CareerImage({ nombre }) {
   return <img src={url} alt={nombre} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '10px 10px 0 0', display: 'block', marginBottom: '10px' }} />
 }
 
+function CarreraModal({ carrera, onClose }) {
+  if (!carrera) return null
+  const img = CAREER_IMAGES[carrera.nombre_carrera] || null
+  return (
+    <motion.div
+      className="modal-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <motion.div
+        className="modal-content"
+        initial={{ opacity: 0, y: 60, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 60, scale: 0.95 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        onClick={e => e.stopPropagation()}
+      >
+        {img && <img src={img} alt={carrera.nombre_carrera} style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '16px 16px 0 0' }} />}
+        <div className="modal-body">
+          <span className="career-area-tag" style={{ marginBottom: '0.5rem', display: 'inline-flex' }}>
+            {carrera.area_nombre}
+          </span>
+          <h2>{carrera.nombre_carrera}</h2>
+          <div className="modal-meta">
+            <span>📅 {carrera.duracion_meses} meses</span>
+            <span>🏛️ {carrera.tipo_opcion}</span>
+          </div>
+          {carrera.salida_laboral && (
+            <div className="modal-section">
+              <h4>💼 Salida laboral</h4>
+              <p>{carrera.salida_laboral}</p>
+            </div>
+          )}
+          {carrera.perfil_recomendado && (
+            <div className="modal-section">
+              <h4>🎯 Perfil recomendado</h4>
+              <p>{carrera.perfil_recomendado}</p>
+            </div>
+          )}
+          {carrera.oferta_universitaria?.length > 0 && (
+            <div className="modal-section">
+              <h4>🏫 Universidades donde se ofrece</h4>
+              <ul className="modal-unis">
+                {carrera.oferta_universitaria.map((u, i) => (
+                  <li key={i}>{u.codigo_universidad} — ${u.costo_referencial_semestre}/semestre</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <button className="btn-primary" style={{ marginTop: '1.5rem', width: '100%' }} onClick={onClose}>Cerrar</button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 export default function ExplorerPage() {
   const [carreras, setCarreras] = useState([]);
   const [universidades, setUniversidades] = useState([]);
@@ -64,6 +122,7 @@ export default function ExplorerPage() {
   const [selected, setSelected] = useState([]);
   const [vsResult, setVsResult] = useState(null);
   const [vsLoading, setVsLoading] = useState(false);
+  const [modalCarrera, setModalCarrera] = useState(null);
 
   useEffect(() => {
     Promise.all([getCarreras(), getUniversidades()])
@@ -218,7 +277,7 @@ export default function ExplorerPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.04 }}
                         whileHover={{ y: -4 }}
-                        onClick={() => toggleSelect(c.id_carrera)}
+                        onClick={() => setModalCarrera(c)}
                       >
                         {isSelected && (
                           <motion.div className="explorer-check" initial={{ scale: 0 }} animate={{ scale: 1 }}>
@@ -386,6 +445,10 @@ export default function ExplorerPage() {
               )}
             </motion.div>
           )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {modalCarrera && <CarreraModal carrera={modalCarrera} onClose={() => setModalCarrera(null)} />}
         </AnimatePresence>
       </section>
     </AnimatedPage>

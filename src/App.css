@@ -367,6 +367,64 @@
 .bento-card-content .bento-card-cta { color: #ffffff; }
 .bento-card-tags span { color: rgba(255,255,255,0.8); }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-content {
+  background: #13131a;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  max-width: 520px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.modal-body {
+  padding: 1.5rem;
+}
+.modal-meta {
+  display: flex;
+  gap: 1rem;
+  margin: 0.75rem 0 1rem;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.9rem;
+}
+.modal-section {
+  margin-top: 1.25rem;
+}
+.modal-section h4 {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.modal-section p {
+  color: rgba(255,255,255,0.85);
+  line-height: 1.6;
+}
+.modal-unis {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.modal-unis li {
+  background: rgba(255,255,255,0.05);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  color: rgba(255,255,255,0.8);
+  font-size: 0.85rem;
+}
+
 /* ─── Responsive ─────────────────────────────────── */
 @media (max-width: 768px) {
   .section { padding: 72px 0; }
