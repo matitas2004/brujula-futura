@@ -47,6 +47,8 @@ const CAREER_IMAGES = {
   'Turismo y Hospitalidad': 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg',
   'Gastronomía': 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
   'Ingeniería Aeroespacial': 'https://images.pexels.com/photos/60132/pexels-photo-60132.jpeg',
+  'Gastronomía en ecuador': 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg',
+  'Ingeniería aeroespacial en ecuador': 'https://images.pexels.com/photos/60132/pexels-photo-60132.jpeg',
 }
 
 function CareerImage({ nombre }) {
