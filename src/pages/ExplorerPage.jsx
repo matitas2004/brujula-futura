@@ -247,6 +247,7 @@ export default function ExplorerPage() {
                         whileHover={{ y: -4 }}
                         onClick={() => trackEvent('UNIVERSITY_CLICK', { universidad: u.nombre_universidad })}
                       >
+                        <CareerImage nombre={u.nombre_universidad} />
                         <span className="career-area-tag">
                           <UniIcon size={12} /> {UNI_LABELS[u.tipo_universidad] || u.tipo_universidad}
                         </span>
